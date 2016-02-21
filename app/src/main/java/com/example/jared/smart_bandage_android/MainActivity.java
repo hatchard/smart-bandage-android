@@ -25,6 +25,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -42,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private ListView lv;
     private HashMap<String, SmartBandage> myBandages;
     private Handler scanHandler;
+    private HashMap<String,SmartBandage> rememberedSmartBandages;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
 
         myBandages = new HashMap<String,SmartBandage>();
+        rememberedSmartBandages = new HashMap<String,SmartBandage>();
     }
 
     @Override
@@ -117,7 +121,7 @@ public class MainActivity extends AppCompatActivity {
     private ScanCallback scanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
-            Log.d(TAG,"onScanResult" );
+            //Log.d(TAG,"onScanResult" );
             processResult(result);
         }
 
@@ -136,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void processResult(ScanResult result){
-        Log.d(TAG,"New BLE Device:  " + result.getDevice().getName() + " @ " + result.getRssi());
+        //Log.d(TAG,"New BLE Device:  " + result.getDevice().getName() + " @ " + result.getRssi());
 
         SmartBandage smartBandage = new SmartBandage(result.getScanRecord(),
                 result.getDevice().getAddress(),
@@ -157,7 +161,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private static class SmartBandageAdapter extends ArrayAdapter<SmartBandage> {
+    private class SmartBandageAdapter extends ArrayAdapter<SmartBandage> {
 
         public SmartBandageAdapter(Context context) {
             super(context, 0);
@@ -170,13 +174,27 @@ public class MainActivity extends AppCompatActivity {
                 convertView = LayoutInflater.from(getContext())
                         .inflate(R.layout.device_layout, viewGroup, false);
             }
-            SmartBandage smartBandage = getItem(position);
+            final SmartBandage smartBandage = getItem(position);
 
             TextView deviceName = (TextView) convertView.findViewById(R.id.textView);
             deviceName.setText(smartBandage.getBandageName());
 
             TextView deviceAddress = (TextView) convertView.findViewById(R.id.textView2);
             deviceAddress.setText(smartBandage.getBandageAddress());
+            CheckBox ch = (CheckBox) convertView.findViewById(R.id.checkBox);
+            ch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                    if(isChecked){
+                        Log.d(TAG,"Remembering " + smartBandage.getBandageAddress());
+                        rememberedSmartBandages.put(smartBandage.getBandageAddress(), smartBandage);
+                    }
+                    else{
+                        Log.d(TAG, "Forgetting " + smartBandage.getBandageAddress());
+                        rememberedSmartBandages.remove(smartBandage.getBandageAddress());
+                    }
+                }
+            });
             return convertView;
         }
 
