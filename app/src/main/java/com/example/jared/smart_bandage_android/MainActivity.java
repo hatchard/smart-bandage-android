@@ -31,9 +31,14 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -184,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                     if(isChecked){
-                        Log.d(TAG,"Remembering " + smartBandage.getBandageAddress());
+                        Log.d(TAG, "Remembering " + smartBandage.getBandageAddress());
                         rememberedSmartBandages.put(smartBandage.getBandageAddress(), smartBandage);
                     }
                     else{
