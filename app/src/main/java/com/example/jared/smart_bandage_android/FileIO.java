@@ -38,13 +38,13 @@ public class FileIO {
             f = getFile(file_name);
             BufferedReader buf = new BufferedReader(new FileReader(f));
             String line = null;
-            StringBuilder stringBulder = new StringBuilder();
+            StringBuilder stringBuilder = new StringBuilder();
 
             while ( (line = buf.readLine()) != null){
-                stringBulder.append(line);
+                stringBuilder.append(line);
             }
             buf.close();
-            return stringBulder.toString();
+            return stringBuilder.toString();
         } catch (IOException e) {
             e.printStackTrace();
             return null;
