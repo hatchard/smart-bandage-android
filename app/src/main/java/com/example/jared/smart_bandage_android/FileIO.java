@@ -22,7 +22,7 @@ import java.util.Map;
  * Created by Jared on 2/16/2016.
  */
 public class FileIO {
-
+    public static final String SAVE = "rememberedDevices.json";
     private File getFile(String file_name) throws IOException {
         File f = new File(file_name);
         if (!f.exists()) {
@@ -68,17 +68,26 @@ public class FileIO {
     }
     public String gsonSmartBandageHashMapSerializer (HashMap<String,SmartBandage> bandageHashMap) {
         Gson gson = new Gson();
-        String serial = gson.toJson(bandageHashMap);
-        return serial;
+        return gson.toJson(bandageHashMap);
     }
 
+    //checks file system for the saved file, if there is no file or data in the file,
+    //it returns a new hashmap
     public HashMap<String,SmartBandage> gsonSmartBandageHashMapDeserializer (String serializedHashMap) {
         Gson gson = new Gson();
         Type hashType = new TypeToken<Map<String,SmartBandage>>() {}.getType();
-        Map<String,SmartBandage> sm = gson.fromJson(serializedHashMap, hashType);
-        HashMap<String,SmartBandage> hm = new HashMap<String, SmartBandage>();
-        hm.putAll(sm);
-        return hm;
+        if (serializedHashMap != null) {
+            Map<String, SmartBandage> sm;
+            sm = gson.fromJson(serializedHashMap, hashType);
+            Log.d("TAG: ", "sm is empty?: " + Boolean.toString(sm.isEmpty()));
+            HashMap<String, SmartBandage> hm = new HashMap<String, SmartBandage>();
+            hm.putAll(sm);
+            return hm;
+        }
+        else {
+            return new HashMap<String, SmartBandage>();
+        }
+
     }
 
 

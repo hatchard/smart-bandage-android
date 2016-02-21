@@ -50,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private HashMap<String, SmartBandage> myBandages;
     private Handler scanHandler;
     private HashMap<String,SmartBandage> rememberedSmartBandages;
+    FileIO fileIO;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +72,7 @@ public class MainActivity extends AppCompatActivity {
         bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
 
         myBandages = new HashMap<String,SmartBandage>();
-        rememberedSmartBandages = new HashMap<String,SmartBandage>();
+        fileIO = new FileIO();
     }
 
     @Override
@@ -106,8 +107,29 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        /* This section of code attempts to read from file, if the file does not exist
+         * it is created, if the file has unreadable data, then an empty hashmap is returned
+         * it then updates the MainActivity to include the devices that are already remembered
+         *
+         */
+        String json = fileIO.readFile(getFilesDir() + fileIO.SAVE);
+        rememberedSmartBandages = fileIO.gsonSmartBandageHashMapDeserializer(json);
+        myBandages.putAll(rememberedSmartBandages);
+        smartBandageAdapter.setNotifyOnChange(false);
+        smartBandageAdapter.addRememberedBandages(true);
+        smartBandageAdapter.clear();
+        smartBandageAdapter.addAll(myBandages.values());
+        smartBandageAdapter.notifyDataSetChanged();
     }
+    @Override
+    protected void onStop() {
+        super.onStop();
+        fileIO.writeFile(getFilesDir() +
+                fileIO.SAVE,
+                false,
+                fileIO.gsonSmartBandageHashMapSerializer(rememberedSmartBandages));
 
+    }
     protected void startScan(){
         ScanFilter smartBandageFilter = new ScanFilter.Builder()
                 .setServiceUuid(SmartBandage.BANDAGE_SERVICE)
@@ -155,9 +177,10 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void handleMessage(Message msg){
             SmartBandage smartBandage = (SmartBandage) msg.obj;
-            myBandages.put(smartBandage.getBandageName(),smartBandage);
+            myBandages.put(smartBandage.getBandageAddress(),smartBandage);
 
             smartBandageAdapter.setNotifyOnChange(false);
+            smartBandageAdapter.addRememberedBandages(false);
             smartBandageAdapter.clear();
             smartBandageAdapter.addAll(myBandages.values());
             smartBandageAdapter.notifyDataSetChanged();
@@ -169,7 +192,10 @@ public class MainActivity extends AppCompatActivity {
         public SmartBandageAdapter(Context context) {
             super(context, 0);
         }
-
+        private boolean remembered = false;
+        public void addRememberedBandages(boolean remembered){
+            this.remembered = remembered;
+        }
         @Override
         public View getView(int position, View convertView, ViewGroup viewGroup){
 
@@ -184,7 +210,13 @@ public class MainActivity extends AppCompatActivity {
 
             TextView deviceAddress = (TextView) convertView.findViewById(R.id.textView2);
             deviceAddress.setText(smartBandage.getBandageAddress());
+
             CheckBox ch = (CheckBox) convertView.findViewById(R.id.checkBox);
+
+            if (remembered){
+                ch.setChecked(true);
+            }
+
             ch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
                 @Override
                 public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -195,6 +227,7 @@ public class MainActivity extends AppCompatActivity {
                     else{
                         Log.d(TAG, "Forgetting " + smartBandage.getBandageAddress());
                         rememberedSmartBandages.remove(smartBandage.getBandageAddress());
+                        remembered = false;
                     }
                 }
             });
