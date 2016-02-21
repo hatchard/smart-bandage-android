@@ -2,7 +2,6 @@ package com.example.jared.smart_bandage_android;
 
 import android.bluetooth.le.ScanRecord;
 import android.os.ParcelUuid;
-
 /**
  * Created by Jared on 2/20/2016.
  */

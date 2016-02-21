@@ -51,7 +51,6 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         lv = (ListView) findViewById(R.id.deviceListView);
-
         smartBandageAdapter = new SmartBandageAdapter(this);
         lv.setAdapter(smartBandageAdapter);
         Button scanBtn = (Button) findViewById(R.id.scanBtn);
