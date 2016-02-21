@@ -1,4 +1,4 @@
-package com.example.android.bluetoothlegatt;
+package com.example.jared.smart_bandage_android;
 
 import android.util.Log;
 
