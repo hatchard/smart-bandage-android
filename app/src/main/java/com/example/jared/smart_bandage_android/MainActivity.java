@@ -51,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
     private Handler scanHandler;
     private HashMap<String,SmartBandage> rememberedSmartBandages;
     FileIO fileIO;
+    Button scanBtn;
+    private static final int SCAN_PERIOD = 10000;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,12 +60,25 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         lv = (ListView) findViewById(R.id.deviceListView);
         smartBandageAdapter = new SmartBandageAdapter(this);
+        scanHandler = new Handler();
         lv.setAdapter(smartBandageAdapter);
-        Button scanBtn = (Button) findViewById(R.id.scanBtn);
+        scanBtn = (Button) findViewById(R.id.scanBtn);
         scanBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startScan();
+                startScan(true);
+            }
+        });
+        Button connectBtn = (Button) findViewById(R.id.connectBtn);
+        connectBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(bluetoothAdapter.isDiscovering()){
+                    Log.d(TAG,"Device still scanning");
+                }
+                else{
+                    Log.d(TAG,"Device No longer Scanning");
+                }
             }
         });
 
@@ -130,7 +145,9 @@ public class MainActivity extends AppCompatActivity {
                 fileIO.gsonSmartBandageHashMapSerializer(rememberedSmartBandages));
 
     }
-    protected void startScan(){
+    protected void startScan(final boolean enable){
+        if (enable) {
+        scanBtn.setEnabled(false);
         ScanFilter smartBandageFilter = new ScanFilter.Builder()
                 .setServiceUuid(SmartBandage.BANDAGE_SERVICE)
                 .build();
@@ -140,7 +157,18 @@ public class MainActivity extends AppCompatActivity {
         ScanSettings settings = new ScanSettings.Builder()
                 .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
                 .build();
-        bluetoothLeScanner.startScan(filters, settings, scanCallback);
+
+
+            bluetoothLeScanner.startScan(filters, settings, scanCallback);
+            scanHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    bluetoothLeScanner.stopScan(scanCallback);
+                    scanBtn.setEnabled(true);
+                }
+            }, SCAN_PERIOD);
+        }
+
     }
 
 
