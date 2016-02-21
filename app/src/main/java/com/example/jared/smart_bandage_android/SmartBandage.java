@@ -11,12 +11,10 @@ public class SmartBandage {
 
     private String bandageName;
     private String bandageAddress;
-    private int bandageRssi;
 
-    public SmartBandage(ScanRecord record,String bandageAddress, int rssi) {
+    public SmartBandage(ScanRecord record,String bandageAddress) {
         this.bandageAddress = bandageAddress;
         this.bandageName = record.getDeviceName();
-        this.bandageRssi = rssi;
     }
 
     public String getBandageName() {
@@ -35,11 +33,4 @@ public class SmartBandage {
         this.bandageAddress = bandageAddress;
     }
 
-    public int getBandageRssi() {
-        return bandageRssi;
-    }
-
-    public void setBandageRssi(int bandageRssi) {
-        this.bandageRssi = bandageRssi;
-    }
 }

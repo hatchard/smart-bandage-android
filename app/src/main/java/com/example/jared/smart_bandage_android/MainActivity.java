@@ -143,8 +143,7 @@ public class MainActivity extends AppCompatActivity {
         //Log.d(TAG,"New BLE Device:  " + result.getDevice().getName() + " @ " + result.getRssi());
 
         SmartBandage smartBandage = new SmartBandage(result.getScanRecord(),
-                result.getDevice().getAddress(),
-                result.getRssi());
+                result.getDevice().getAddress());
         msgHandler.sendMessage(Message.obtain(null,0,smartBandage));
     }
 
