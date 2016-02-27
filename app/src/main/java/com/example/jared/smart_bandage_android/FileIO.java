@@ -33,9 +33,8 @@ public class FileIO {
     }
 
     public String readFile(String file_name) {
-        File f = null;
         try {
-            f = getFile(file_name);
+            File f = getFile(file_name);
             BufferedReader buf = new BufferedReader(new FileReader(f));
             String line = null;
             StringBuilder stringBuilder = new StringBuilder();
@@ -79,13 +78,19 @@ public class FileIO {
         if (serializedHashMap != null) {
             Map<String, SmartBandage> sm;
             sm = gson.fromJson(serializedHashMap, hashType);
-            Log.d("TAG: ", "sm is empty?: " + Boolean.toString(sm.isEmpty()));
-            HashMap<String, SmartBandage> hm = new HashMap<String, SmartBandage>();
-            hm.putAll(sm);
-            return hm;
+            if (sm == null){
+                return new HashMap<String,SmartBandage>();
+            }
+            else {
+                Log.d("TAG: ", "sm is empty?: " + Boolean.toString(sm.isEmpty()));
+                HashMap<String, SmartBandage> hm = new HashMap<String, SmartBandage>();
+                hm.putAll(sm);
+                return hm;
+            }
+
         }
         else {
-            return new HashMap<String, SmartBandage>();
+            return new HashMap<String,SmartBandage>();
         }
 
     }

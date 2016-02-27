@@ -13,6 +13,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v4.app.ActivityCompat;
@@ -43,6 +44,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
+    private static final int REQUEST_EXTERNAL_STORAGE = 2;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothLeScanner bluetoothLeScanner;
     private SmartBandageAdapter smartBandageAdapter;
@@ -109,6 +111,16 @@ public class MainActivity extends AppCompatActivity {
 
             }
         }
+
+        int permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_EXTERNAL_STORAGE);
+        }
         if (bluetoothAdapter == null || !bluetoothAdapter.isEnabled()){
             Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivity(enableBtIntent);
@@ -127,7 +139,9 @@ public class MainActivity extends AppCompatActivity {
          * it then updates the MainActivity to include the devices that are already remembered
          *
          */
-        String json = fileIO.readFile(getFilesDir() + fileIO.SAVE);
+        String json = fileIO.readFile(getFilesDir() +
+                fileIO.SAVE);
+        rememberedSmartBandages = new HashMap<String,SmartBandage>();
         rememberedSmartBandages = fileIO.gsonSmartBandageHashMapDeserializer(json);
         myBandages.putAll(rememberedSmartBandages);
         smartBandageAdapter.setNotifyOnChange(false);
@@ -139,8 +153,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        fileIO.writeFile(getFilesDir() +
-                fileIO.SAVE,
+        Log.d(TAG, "Writing File to Storage");
+        fileIO.writeFile(getFilesDir() + FileIO.SAVE,
                 false,
                 fileIO.gsonSmartBandageHashMapSerializer(rememberedSmartBandages));
 
