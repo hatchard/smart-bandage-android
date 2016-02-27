@@ -1,6 +1,7 @@
 package com.example.jared.smart_bandage_android;
 
 import android.Manifest;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
@@ -13,6 +14,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Parcel;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -46,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     FileIO fileIO;
     Button scanBtn;
     private static final int SCAN_PERIOD = 10000;
-
+    private Activity myself = this;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,6 +73,9 @@ public class MainActivity extends AppCompatActivity {
                 }
                 else{
                     Log.d(TAG,"Device No longer Scanning");
+                    final Intent intent = new Intent(myself,ConnectedDevicesActivity.class);
+                    intent.putExtra(ConnectedDevicesActivity.DEVICE_LIST,myBandages);
+                    startActivity(intent);
                 }
             }
         });

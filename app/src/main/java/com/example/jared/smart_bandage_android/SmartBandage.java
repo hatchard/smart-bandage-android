@@ -2,10 +2,13 @@ package com.example.jared.smart_bandage_android;
 
 import android.bluetooth.le.ScanRecord;
 import android.os.ParcelUuid;
+
+import java.io.Serializable;
+
 /**
  * Created by Jared on 2/20/2016.
  */
-public class SmartBandage {
+public class SmartBandage implements Serializable{
     public static final ParcelUuid BANDAGE_SERVICE = ParcelUuid.fromString("0000f0f0-0000-1000-8000-00805f9b34fb");
 
     private String bandageName;
