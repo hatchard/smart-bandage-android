@@ -23,9 +23,6 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_connected_devices);
         deviceList = (HashMap<String,SmartBandage>) getIntent().getSerializableExtra(DEVICE_LIST);
         deviceListview = (ExpandableListView)findViewById(R.id.listView);
-        for (String key : deviceList.keySet()){
-            Log.i(TAG + "found an address",key);
-        }
-
+        
     }
 }
