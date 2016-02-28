@@ -23,7 +23,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ConnectedDevicesActivity"></activity>
+        <activity android:name=".ConnectedDevicesActivity" />
+        <activity android:name=".DeviceServiceViewActivity"></activity>
     </application>
 
 </manifest>

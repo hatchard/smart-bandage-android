@@ -26,7 +26,6 @@ public class SmartBandage implements Serializable{
     private String bandageName;
     private String bandageAddress;
     private boolean bandageConnectionStatus = false;
-    private HashMap<String,String> gattServices = null;
 
     public SmartBandage(ScanRecord record,String bandageAddress) {
         this.bandageAddress = bandageAddress;
@@ -37,10 +36,6 @@ public class SmartBandage implements Serializable{
         this.bandageAddress = gatt.getDevice().getAddress();
         this.bandageName = gatt.getDevice().getName();
         this.bandageConnectionStatus = connStatus;
-        this.gattServices = new HashMap<String,String>();
-        for ( BluetoothGattService gattService : gatt.getServices()){
-            Log.d(TAG,"Service Discovered: " + gattService.getUuid().toString());
-        }
     }
 
     public String getBandageName() {

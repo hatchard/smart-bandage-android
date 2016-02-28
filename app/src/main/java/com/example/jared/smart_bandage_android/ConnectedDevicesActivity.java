@@ -25,6 +25,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -70,12 +72,23 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
         bluetoothAdapter = bluetoothManager.getAdapter();
         connectionListAdapter = new ConnectionListAdapter(this);
         deviceListview.setAdapter(connectionListAdapter);
+        deviceListview.setOnItemClickListener(listviewListener);
         for(String key : deviceList.keySet()){
             Log.d(TAG, "Attempting Connection to Device " + key);
             BluetoothDevice device =  bluetoothAdapter.getRemoteDevice(key);
             device.connectGatt(this,true,mGattCallback);
         }
     }
+    private OnItemClickListener listviewListener =  new OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            SmartBandage sm = (SmartBandage)parent.getItemAtPosition(position);
+            Log.d(TAG,"Item Selected:" + sm.getBandageName() + " " + sm.getBandageAddress());
+            Intent i = new Intent(myself,DeviceServiceViewActivity.class);
+            i.putExtra(DeviceServiceViewActivity.BANDAGE, sm);
+            startActivity(i);
+        }
+    };
 
     private BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
