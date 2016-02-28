@@ -1,21 +1,33 @@
 package com.example.jared.smart_bandage_android;
 
 import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattService;
 import android.bluetooth.le.ScanRecord;
 import android.os.ParcelUuid;
+import android.support.annotation.NonNull;
+import android.util.Log;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Created by Jared on 2/20/2016.
  */
 public class SmartBandage implements Serializable{
+    private static final String TAG = SmartBandage.class.getSimpleName();
     public static final ParcelUuid BANDAGE_SERVICE = ParcelUuid.fromString("0000f0f0-0000-1000-8000-00805f9b34fb");
     public final static boolean CONNECTED = true;
     public final static boolean DISCONNECTED = false;
     private String bandageName;
     private String bandageAddress;
     private boolean bandageConnectionStatus = false;
+    private HashMap<String,String> gattServices = null;
+
     public SmartBandage(ScanRecord record,String bandageAddress) {
         this.bandageAddress = bandageAddress;
         this.bandageName = record.getDeviceName();
@@ -25,6 +37,10 @@ public class SmartBandage implements Serializable{
         this.bandageAddress = gatt.getDevice().getAddress();
         this.bandageName = gatt.getDevice().getName();
         this.bandageConnectionStatus = connStatus;
+        this.gattServices = new HashMap<String,String>();
+        for ( BluetoothGattService gattService : gatt.getServices()){
+            Log.d(TAG,"Service Discovered: " + gattService.getUuid().toString());
+        }
     }
 
     public String getBandageName() {

@@ -68,13 +68,12 @@ public class MainActivity extends AppCompatActivity {
         connectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(bluetoothAdapter.isDiscovering()){
-                    Log.d(TAG,"Device still scanning");
-                }
-                else{
-                    Log.d(TAG,"Device No longer Scanning");
-                    final Intent intent = new Intent(myself,ConnectedDevicesActivity.class);
-                    intent.putExtra(ConnectedDevicesActivity.DEVICE_LIST,myBandages);
+                if (bluetoothAdapter.isDiscovering()) {
+                    Log.d(TAG, "Device still scanning");
+                } else {
+                    Log.d(TAG, "Device No longer Scanning");
+                    final Intent intent = new Intent(myself, ConnectedDevicesActivity.class);
+                    intent.putExtra(ConnectedDevicesActivity.DEVICE_LIST, rememberedSmartBandages);
                     startActivity(intent);
                 }
             }
@@ -126,21 +125,32 @@ public class MainActivity extends AppCompatActivity {
          * it then updates the MainActivity to include the devices that are already remembered
          *
          */
+        Log.d(TAG,"Reading remembered Devices from File");
         String json = fileIO.readFile(getFilesDir() +
                 fileIO.SAVE);
         rememberedSmartBandages = new HashMap<String,SmartBandage>();
         rememberedSmartBandages = fileIO.gsonSmartBandageHashMapDeserializer(json);
         myBandages.putAll(rememberedSmartBandages);
         smartBandageAdapter.setNotifyOnChange(false);
-        smartBandageAdapter.addRememberedBandages(true);
+        smartBandageAdapter.addRememberedBandages(false);
         smartBandageAdapter.clear();
         smartBandageAdapter.addAll(myBandages.values());
         smartBandageAdapter.notifyDataSetChanged();
     }
     @Override
-    protected void onStop() {
+     protected void onStop() {
         super.onStop();
-        Log.d(TAG, "Writing File to Storage");
+        Log.d(TAG, "Writing File to Storage On Stop");
+        fileIO.writeFile(getFilesDir() + FileIO.SAVE,
+                false,
+                fileIO.gsonSmartBandageHashMapSerializer(rememberedSmartBandages));
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "Writing File to Storage On Pause");
         fileIO.writeFile(getFilesDir() + FileIO.SAVE,
                 false,
                 fileIO.gsonSmartBandageHashMapSerializer(rememberedSmartBandages));
@@ -257,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "Forgetting " + smartBandage.getBandageAddress());
                         rememberedSmartBandages.remove(smartBandage.getBandageAddress());
                         remembered = false;
+                        Log.d(TAG,"remembered Device Exists: " + Boolean.toString(rememberedSmartBandages.containsKey(smartBandage.getBandageAddress())));
                     }
                 }
             });

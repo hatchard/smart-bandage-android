@@ -1,5 +1,7 @@
 package com.example.jared.smart_bandage_android;
 
+import android.annotation.TargetApi;
+import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -56,7 +58,7 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
     private ListView deviceListview;
     private BluetoothAdapter bluetoothAdapter;
     private HashMap<String,SmartBandage> deviceConnectionStatus;
-
+    private Activity myself = this;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -149,7 +151,7 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
             }
             else {
                 deviceConnectionStatus.setText("Disconnected");
-                convertView.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light,null));
+                convertView.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light, null));
             }
 
 
