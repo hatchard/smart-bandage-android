@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
          */
         Log.d(TAG,"Reading remembered Devices from File");
         String json = fileIO.readFile(getFilesDir() +
-                fileIO.SAVE);
+                FileIO.SAVE);
         rememberedSmartBandages = new HashMap<String,SmartBandage>();
         rememberedSmartBandages = fileIO.gsonSmartBandageHashMapDeserializer(json);
         myBandages.putAll(rememberedSmartBandages);
