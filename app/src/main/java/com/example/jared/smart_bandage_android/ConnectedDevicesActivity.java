@@ -160,11 +160,11 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
             TextView deviceConnectionStatus = (TextView) convertView.findViewById(R.id.connectionStatus);
             if (smartBandage.getBandageConnectionStatus()){
                 deviceConnectionStatus.setText("Connected");
-                convertView.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light,null));
+                //convertView.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light,null));
             }
             else {
                 deviceConnectionStatus.setText("Disconnected");
-                convertView.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light, null));
+                //convertView.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light, null));
             }
 
 
