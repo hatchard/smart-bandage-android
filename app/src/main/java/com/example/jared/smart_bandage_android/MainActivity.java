@@ -78,6 +78,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+        Button stopBtn = (Button) findViewById(R.id.stopBtn);
+        stopBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(MainActivity.this,SmartBandageConnService.class);
+                i.setAction(CustomActions.STOP_FOREGROUND_SERVICE);
+                startService(i);
+            }
+        });
 
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
@@ -125,7 +134,10 @@ public class MainActivity extends AppCompatActivity {
          * it then updates the MainActivity to include the devices that are already remembered
          *
          */
-        Log.d(TAG,"Reading remembered Devices from File");
+        Log.d(TAG, "Reading remembered Devices from File");
+        Intent startIntent = new Intent(MainActivity.this,SmartBandageConnService.class);
+        startIntent.setAction(CustomActions.APP_START);
+        startService(startIntent);
         String json = fileIO.readFile(getFilesDir() +
                 FileIO.SAVE);
         rememberedSmartBandages = new HashMap<String,SmartBandage>();

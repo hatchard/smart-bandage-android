@@ -38,11 +38,20 @@
         android:layout_weight="1.0"/>
     </LinearLayout>
 
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop Service"
+        android:id="@+id/stopBtn"
+        android:layout_below="@+id/linearLayout"
+        android:layout_centerHorizontal="true" />
     <ListView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/deviceListView"
-        android:layout_below="@+id/linearLayout"
+        android:layout_below="@+id/stopBtn"
         android:layout_alignParentEnd="true" />
+
+
 
 </RelativeLayout>
