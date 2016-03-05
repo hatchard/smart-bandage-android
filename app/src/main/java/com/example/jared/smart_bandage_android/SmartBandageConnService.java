@@ -142,31 +142,31 @@ public class SmartBandageConnService extends Service {
 
     private void broadcastUpdate(final String action,
                                  final BluetoothGattCharacteristic characteristic) {
-        final Intent intent = new Intent(action);
+        final Intent intent = new Intent();
 
         if (SampleGattAttributes.SMART_BANDAGE_TEMP.equals(characteristic.getUuid())) {
-
+            intent.setAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
 
         } else if (SampleGattAttributes.SMART_BANDAGE_HUMIDITY.equals(characteristic.getUuid())){
-
+            intent.setAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
 
         } else if (SampleGattAttributes.SMART_BANDAGE_ID.equals(characteristic.getUuid())){
-
+            intent.setAction(CustomActions.BANDAGE_ID_AVAILABLE);
 
         } else if (SampleGattAttributes.SMART_BANDAGE_STATE.equals(characteristic.getUuid())){
-
+            intent.setAction(CustomActions.BANDAGE_STATE_AVAILABLE);
 
         } else if (SampleGattAttributes.SMART_BANDAGE_BATTERY_CHRG.equals(characteristic.getUuid())){
-
+            intent.setAction(CustomActions.BANDAGE_BATT_CHRG_AVAILABLE);
 
         } else if (SampleGattAttributes.SMART_BANDAGE_EXTERNAL_POWER.equals(characteristic.getUuid())){
-
+            intent.setAction(CustomActions.EXT_POWER_AVAILABLE);
 
         } else if (SampleGattAttributes.SMART_BANDAGE_MOISTURE_MAP.equals(characteristic.getUuid())){
-
+            intent.setAction(CustomActions.MOISTURE_DATA_AVAILABLE);
 
         } else if (SampleGattAttributes.SMART_BANDAGE_SYS_TIME.equals(characteristic.getUuid())){
-
+            intent.setAction(CustomActions.SYS_TIME_DATA_AVAILABLE);
 
         } else {
 
