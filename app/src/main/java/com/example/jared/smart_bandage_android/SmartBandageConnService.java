@@ -153,6 +153,7 @@ public class SmartBandageConnService extends Service {
             intent.putExtra("EXTRA_DATA", SmartBandage.parseHumidity(characteristic));
         } else if (SampleGattAttributes.SMART_BANDAGE_ID.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.BANDAGE_ID_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseID(characteristic));
 
         } else if (SampleGattAttributes.SMART_BANDAGE_STATE.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.BANDAGE_STATE_AVAILABLE);
