@@ -26,6 +26,7 @@ public class SampleGattAttributes {
     public static String HEART_RATE_MEASUREMENT = "00002a37-0000-1000-8000-00805f9b34fb";
     public static String CLIENT_CHARACTERISTIC_CONFIG = "00002902-0000-1000-8000-00805f9b34fb";
     public static String BUTTON_STATUS = "f000ac01-0451-4000-b000-000000000000";
+    public static String SMART_BANDAGE_SERVICE = "0000f0f0-0000-1000-8000-00805f9b34fb";
 
     static {
         // Define the UUIDs of the services that your bluetooth device exposes

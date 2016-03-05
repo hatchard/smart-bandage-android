@@ -3,15 +3,28 @@ package com.example.jared.smart_bandage_android;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 
 public class SmartBandageConnService extends Service {
     private static final String TAG = SmartBandageConnService.class.getSimpleName();
     HashMap<String,SmartBandage> rememberedBandages;
+    BluetoothAdapter bluetoothAdapter;
     public SmartBandageConnService() {
     }
 
@@ -42,8 +55,12 @@ public class SmartBandageConnService extends Service {
                 .setOngoing(true);
         Notification notification = nBuilder.build();
         startForeground(CustomActions.FOREGROUND_SERVICE_ID, notification);
+        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+        bluetoothAdapter = bluetoothManager.getAdapter();
         for (String key : rememberedBandages.keySet()){
             Log.i(TAG,"Device " + key );
+            BluetoothDevice device =  bluetoothAdapter.getRemoteDevice(key);
+            device.connectGatt(this, true, mGattCallback);
         }
     }
 
@@ -67,5 +84,58 @@ public class SmartBandageConnService extends Service {
         super.onDestroy();
     }
 
+    private BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
+        @Override
+        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+            if (newState == BluetoothProfile.STATE_CONNECTED) {
+                Log.i(TAG, "Connected to GATT server.");
+                // Attempts to discover services after successful connection.
+                Log.i(TAG, "Attempting to start service discovery:" +
+                        gatt.discoverServices());
+            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                Log.i(TAG, "Disconnected from GATT server.");
+
+            }
+        }
+
+        @Override
+        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.i(TAG, "Services Discovered YAAY");
+
+                BluetoothGattService service = gatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
+                List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
+                for ( BluetoothGattCharacteristic chara : charas){
+                    Log.i(TAG, SampleGattAttributes.lookup(chara.getUuid().toString(), "UNKNOWN"));
+                    gatt.setCharacteristicNotification(chara, true);
+                    List<BluetoothGattDescriptor> descriptors = chara.getDescriptors();
+                    for (BluetoothGattDescriptor descriptor : descriptors) {
+                        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                        gatt.writeDescriptor(descriptor);
+                    }
+                }
+
+            } else {
+                Log.w(TAG, "onServicesDiscovered received: " + status);
+            }
+        }
+
+        @Override
+        public void onCharacteristicRead(BluetoothGatt gatt,
+                                         BluetoothGattCharacteristic characteristic,
+                                         int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                Log.i(TAG,"Read Characteristic");
+
+            }
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt,
+                                            BluetoothGattCharacteristic characteristic) {
+            Log.i(TAG,"Characteristic Changed");
+            //Here is where broadcasts will be sent containing information when characteristic is updated
+        }
+    };
 
 }
