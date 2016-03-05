@@ -1,6 +1,7 @@
 package com.example.jared.smart_bandage_android;
 
 import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.le.ScanRecord;
 import android.os.ParcelUuid;
@@ -62,4 +63,36 @@ public class SmartBandage implements Serializable{
         return this.bandageConnectionStatus;
     }
 
+    public static float parseTemp(BluetoothGattCharacteristic characteristic){
+
+        return 1;
+    }
+    public static float parseHumidity(BluetoothGattCharacteristic characteristic){
+
+        return 1;
+    }
+    public static float parseID(BluetoothGattCharacteristic characteristic){
+
+        return 1;
+    }
+    public static float parseState(BluetoothGattCharacteristic characteristic){
+
+        return 1;
+    }
+    public static float parseBattery(BluetoothGattCharacteristic characteristic){
+
+        return 1;
+    }
+    public static float parseExtPower(BluetoothGattCharacteristic characteristic){
+
+        return 1;
+    }
+    public static float parseMoisture(BluetoothGattCharacteristic characteristic){
+
+        return 1;
+    }
+    public static float parseSysTime(BluetoothGattCharacteristic characteristic){
+
+        return 1;
+    }
 }

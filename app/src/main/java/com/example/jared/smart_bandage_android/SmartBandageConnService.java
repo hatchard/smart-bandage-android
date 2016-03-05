@@ -146,27 +146,33 @@ public class SmartBandageConnService extends Service {
 
         if (SampleGattAttributes.SMART_BANDAGE_TEMP.equals(characteristic.getUuid())) {
             intent.setAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
+            intent.putExtra("EXTRA_DATA",SmartBandage.parseTemp(characteristic));
 
         } else if (SampleGattAttributes.SMART_BANDAGE_HUMIDITY.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
-
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseHumidity(characteristic));
         } else if (SampleGattAttributes.SMART_BANDAGE_ID.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.BANDAGE_ID_AVAILABLE);
 
         } else if (SampleGattAttributes.SMART_BANDAGE_STATE.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.BANDAGE_STATE_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseState(characteristic));
 
         } else if (SampleGattAttributes.SMART_BANDAGE_BATTERY_CHRG.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.BANDAGE_BATT_CHRG_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseBattery(characteristic));
 
         } else if (SampleGattAttributes.SMART_BANDAGE_EXTERNAL_POWER.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.EXT_POWER_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseExtPower(characteristic));
 
         } else if (SampleGattAttributes.SMART_BANDAGE_MOISTURE_MAP.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.MOISTURE_DATA_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseMoisture(characteristic));
 
         } else if (SampleGattAttributes.SMART_BANDAGE_SYS_TIME.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.SYS_TIME_DATA_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
 
         } else {
 
