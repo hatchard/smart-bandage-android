@@ -23,6 +23,7 @@ import java.util.UUID;
 
 public class SmartBandageConnService extends Service {
     private static final String TAG = SmartBandageConnService.class.getSimpleName();
+    private static final String EXTRA_DATA = "EXTRA_DATA";
     HashMap<String,SmartBandage> rememberedBandages;
     BluetoothAdapter bluetoothAdapter;
     public SmartBandageConnService() {
@@ -125,8 +126,8 @@ public class SmartBandageConnService extends Service {
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.i(TAG,"Read Characteristic");
-
+                Log.i(TAG, "Read Characteristic");
+                broadcastUpdate(CustomActions.DATA_AVAILABLE,characteristic);
             }
         }
 
@@ -135,7 +136,41 @@ public class SmartBandageConnService extends Service {
                                             BluetoothGattCharacteristic characteristic) {
             Log.i(TAG,"Characteristic Changed");
             //Here is where broadcasts will be sent containing information when characteristic is updated
+            broadcastUpdate(CustomActions.DATA_AVAILABLE,characteristic);
         }
     };
 
+    private void broadcastUpdate(final String action,
+                                 final BluetoothGattCharacteristic characteristic) {
+        final Intent intent = new Intent(action);
+
+        if (SampleGattAttributes.SMART_BANDAGE_TEMP.equals(characteristic.getUuid())) {
+
+
+        } else if (SampleGattAttributes.SMART_BANDAGE_HUMIDITY.equals(characteristic.getUuid())){
+
+
+        } else if (SampleGattAttributes.SMART_BANDAGE_ID.equals(characteristic.getUuid())){
+
+
+        } else if (SampleGattAttributes.SMART_BANDAGE_STATE.equals(characteristic.getUuid())){
+
+
+        } else if (SampleGattAttributes.SMART_BANDAGE_BATTERY_CHRG.equals(characteristic.getUuid())){
+
+
+        } else if (SampleGattAttributes.SMART_BANDAGE_EXTERNAL_POWER.equals(characteristic.getUuid())){
+
+
+        } else if (SampleGattAttributes.SMART_BANDAGE_MOISTURE_MAP.equals(characteristic.getUuid())){
+
+
+        } else if (SampleGattAttributes.SMART_BANDAGE_SYS_TIME.equals(characteristic.getUuid())){
+
+
+        } else {
+
+        }
+        sendBroadcast(intent);
+    }
 }

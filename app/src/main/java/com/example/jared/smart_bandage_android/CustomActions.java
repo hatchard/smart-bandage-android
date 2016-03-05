@@ -8,6 +8,7 @@ public class CustomActions {
     public static final String STOP_FOREGROUND_SERVICE = "com.example.jared.smart-bandage.stop_foreground";
     public static final String SIMPLE_BROADCAST_ACTION = "com.example.jared.smart-bandage.simple_broadcast";
     public static final String MAIN_ACTION = "com.example.smart_bandage_android.main";
+    public static final String DATA_AVAILABLE = "com.example.smart_bandage_android.data_available";
 
     public static final int FOREGROUND_SERVICE_ID = 101;
 }
