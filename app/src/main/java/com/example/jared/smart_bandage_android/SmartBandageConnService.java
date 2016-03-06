@@ -49,7 +49,7 @@ public class SmartBandageConnService extends Service {
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, activityIntent, 0);
         Log.i(TAG, "Received Start Foreground Service Intent");
         Notification.Builder nBuilder = new Notification.Builder(this)
-                .setContentTitle("Foreground Service")
+                .setContentTitle("Smart Bandage Service")
                 .setContentText("Running..")
                 .setContentIntent(pendingIntent)
                 .setSmallIcon(R.drawable.black_circle)
@@ -127,7 +127,7 @@ public class SmartBandageConnService extends Service {
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.i(TAG, "Read Characteristic");
-                broadcastUpdate(CustomActions.DATA_AVAILABLE,characteristic);
+                broadcastUpdate(characteristic);
             }
         }
 
@@ -136,21 +136,22 @@ public class SmartBandageConnService extends Service {
                                             BluetoothGattCharacteristic characteristic) {
             Log.i(TAG,"Characteristic Changed");
             //Here is where broadcasts will be sent containing information when characteristic is updated
-            broadcastUpdate(CustomActions.DATA_AVAILABLE,characteristic);
+            broadcastUpdate(characteristic);
         }
     };
 
-    private void broadcastUpdate(final String action,
-                                 final BluetoothGattCharacteristic characteristic) {
+    private void broadcastUpdate(final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent();
 
         if (SampleGattAttributes.SMART_BANDAGE_TEMP.equals(characteristic.getUuid())) {
+            Log.i(TAG,"TEMP: " + characteristic.getValue().toString());
             intent.setAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
             intent.putExtra("EXTRA_DATA",SmartBandage.parseTemp(characteristic));
 
         } else if (SampleGattAttributes.SMART_BANDAGE_HUMIDITY.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
             intent.putExtra("EXTRA_DATA", SmartBandage.parseHumidity(characteristic));
+
         } else if (SampleGattAttributes.SMART_BANDAGE_ID.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.BANDAGE_ID_AVAILABLE);
             intent.putExtra("EXTRA_DATA", SmartBandage.parseID(characteristic));
