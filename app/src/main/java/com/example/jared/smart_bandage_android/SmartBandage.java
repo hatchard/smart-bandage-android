@@ -71,11 +71,11 @@ public class SmartBandage implements Serializable{
 
         return 1;
     }
-    public static float parseID(BluetoothGattCharacteristic characteristic){
+    public static int parseID(BluetoothGattCharacteristic characteristic){
 
         return 1;
     }
-    public static float parseState(BluetoothGattCharacteristic characteristic){
+    public static int parseState(BluetoothGattCharacteristic characteristic){
 
         return 1;
     }
@@ -83,7 +83,7 @@ public class SmartBandage implements Serializable{
 
         return 1;
     }
-    public static float parseExtPower(BluetoothGattCharacteristic characteristic){
+    public static int parseExtPower(BluetoothGattCharacteristic characteristic){
 
         return 1;
     }
@@ -91,7 +91,7 @@ public class SmartBandage implements Serializable{
 
         return 1;
     }
-    public static float parseSysTime(BluetoothGattCharacteristic characteristic){
+    public static int parseSysTime(BluetoothGattCharacteristic characteristic){
 
         return 1;
     }
