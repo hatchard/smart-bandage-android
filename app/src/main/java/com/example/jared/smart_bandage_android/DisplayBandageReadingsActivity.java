@@ -36,9 +36,9 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
         private ArrayList<DisplayModel> generateData(){
             ArrayList<DisplayModel> models = new ArrayList<DisplayModel>();
-            models.add(new DisplayModel(R.drawable.black_circle,"Temperature: ","1")); //change to icon matching
-            models.add(new DisplayModel(R.drawable.black_circle,"Humidity: ","2"));
-            models.add(new DisplayModel(R.drawable.black_circle,"Moisture: ","12"));
+            models.add(new DisplayModel(R.drawable.thermometer,"Temperature: ","1")); //change to icon matching
+            models.add(new DisplayModel(R.drawable.cloud,"Humidity: ","2"));
+            models.add(new DisplayModel(R.drawable.raindrop,"Moisture: ","12"));
 
             return models;
         }
