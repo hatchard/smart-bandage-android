@@ -46,6 +46,8 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     }
 
 
+    // Couldn't get this working in the onClick
+    // TODO look into it
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle item selection
@@ -54,7 +56,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 viewNewConnection();
                 return true;
             case R.id.advanced_view:
-                //viewAdvancedView();
+                viewAdvancedView();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -77,12 +79,12 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
     }
 
-    /*
+
     public void viewAdvancedView(){
-        Intent intent = new Intent();
-        activity.startActivity(intent);
+        Intent intent = new Intent(this, ConnectedDevicesActivity.class);
+        startActivity(intent);
     }
-    */
+
 
 }
 

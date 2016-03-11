@@ -65,7 +65,12 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connected_devices);
+
         deviceList = (HashMap<String,SmartBandage>) getIntent().getSerializableExtra(DEVICE_LIST);
+        if(deviceList == null) {
+            deviceList = new HashMap<String, SmartBandage>();
+        }
+
         deviceListview = (ListView)findViewById(R.id.listView);
         deviceConnectionStatus = new HashMap<String,SmartBandage>();
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
@@ -73,6 +78,7 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
         connectionListAdapter = new ConnectionListAdapter(this);
         deviceListview.setAdapter(connectionListAdapter);
         deviceListview.setOnItemClickListener(listviewListener);
+
         for(String key : deviceList.keySet()){
             Log.d(TAG, "Attempting Connection to Device " + key);
             BluetoothDevice device =  bluetoothAdapter.getRemoteDevice(key);
