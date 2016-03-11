@@ -18,15 +18,13 @@ import java.util.ArrayList;
 public class DisplayBandageReadingsActivity extends AppCompatActivity {
     //probably not the best way to do this
     Context context;
-    private DisplayBandageReadingsController controller;
+    
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_bandage_readings);
         context = this;
-        controller = new DisplayBandageReadingsController(this);
-       // controller.setBandageReadingsViewItemOnClick();
 
 
         // 1. pass context and data to the custom adapter
@@ -56,7 +54,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         // Handle item selection
         switch (item.getItemId()) {
             case R.id.new_connection:
-                viewNewConnectionOnClick();
+                viewNewConnection();
                 return true;
             case R.id.advanced_view:
                 viewAdvancedView();
@@ -76,12 +74,16 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         return models;
     }
 
-    public void viewNewConnectionOnClick() {
-        controller.viewNewConnectionOnClick();
+    public void viewNewConnection() {
+        Intent intent = new Intent(this, MainActivity.class);
+        startActivity(intent);
+
     }
 
+
     public void viewAdvancedView(){
-        controller.viewAdvancedViewOnClick();
+        Intent intent = new Intent(this, ConnectedDevicesActivity.class);
+        startActivity(intent);
     }
 
 
