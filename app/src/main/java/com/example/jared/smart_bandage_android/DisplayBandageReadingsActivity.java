@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.widget.ListView;
 
@@ -33,6 +35,13 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
        // setListAdapter(adapter);
 
         }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.sb_menu, menu);
+        return true;
+    }
 
         private ArrayList<DisplayModel> generateData(){
             ArrayList<DisplayModel> models = new ArrayList<DisplayModel>();

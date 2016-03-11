@@ -4,6 +4,8 @@
     <string name="unknown_characteristic">Unknown Characteristic</string>
     <string name="title_activity_bandage_reading">BandageReadingActivity</string>
     <string name="title_activity_login">Sign in</string>
+    <string name="new_connection">Connect to new Bandage</string>
+    <string name="advanced_view">Advanced View</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
