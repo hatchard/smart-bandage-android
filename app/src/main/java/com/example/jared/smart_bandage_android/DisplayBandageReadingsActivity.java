@@ -3,22 +3,23 @@ package com.example.jared.smart_bandage_android;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ListView;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
+
 
 
 public class DisplayBandageReadingsActivity extends AppCompatActivity {
     //probably not the best way to do this
     Context context;
-    
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +38,19 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         listView.setAdapter(adapter);// if extending Activity
        // setListAdapter(adapter);
 
+        try {
+            JSONObject toSend = new JSONObject();
+            toSend.put("msg", "hello");
+
+            SendData transmitter = new SendData();
+            transmitter.execute(new JSONObject[] {toSend});
+
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
+
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -64,12 +77,26 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         }
     }
 
+    // Get the data to display in the Activity.
+    public String getTemperatureData() {
+
+        return "hot";
+    }
+
+    public String getHumidityData() {
+
+        return "humid";
+    }
+
+    public String getMoistureData() {
+        return "wet";
+    }
 
     private ArrayList<DisplayModel> generateData(){
         ArrayList<DisplayModel> models = new ArrayList<DisplayModel>();
-        models.add(new DisplayModel(R.drawable.thermometer,"Temperature: ","1")); //change to icon matching
-        models.add(new DisplayModel(R.drawable.cloud,"Humidity: ","2"));
-        models.add(new DisplayModel(R.drawable.raindrop,"Moisture: ","12"));
+        models.add(new DisplayModel(R.drawable.thermometer,"Temperature: ", getTemperatureData()));
+        models.add(new DisplayModel(R.drawable.cloud,"Humidity: ", getHumidityData()));
+        models.add(new DisplayModel(R.drawable.raindrop, "Moisture: ", getMoistureData()));
 
         return models;
     }
