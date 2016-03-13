@@ -1,9 +1,11 @@
 package com.example.jared.smart_bandage_android;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 
+import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,6 +34,12 @@ public class LoginActivity extends Activity  {
         userName=(EditText)findViewById(R.id.enterName);
         password=(EditText)findViewById(R.id.enterPassword);
         bandageID=(EditText)findViewById(R.id.bandageID);
+        loginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                attemptLogin();
+            }
+        });
 
 
         /*loginButton.setOnClickListener(new View.OnClickListener() {
@@ -48,6 +56,33 @@ public class LoginActivity extends Activity  {
             }
         });
 */
+    }
+
+    private void attemptLogin() {
+        userName.setError(null);
+        String usernameString = userName.getText().toString();
+        password.setError(null);
+        String passwordString = password.getText().toString();
+        bandageID.setError(null);
+        String bandageString = bandageID.getText().toString();
+
+        if (TextUtils.isEmpty(usernameString)) {
+            userName.setError(getString(R.string.error_field_required));
+        }
+
+        else if (TextUtils.isEmpty(passwordString)) {
+            password.setError(getString(R.string.error_field_required));
+        }
+
+        else if (TextUtils.isEmpty(bandageString)) {
+            bandageID.setError(getString(R.string.error_field_required));
+        }
+
+        else {
+            // TODO Get user info from internet
+            Intent intent = new Intent(this, MainActivity.class);
+            startActivity(intent);
+        }
     }
 
 }

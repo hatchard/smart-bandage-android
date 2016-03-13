@@ -22,7 +22,7 @@ tools:context="com.example.jared.smart_bandage_android.LoginActivity">
         android:id="@+id/textView"
         android:layout_below="@+id/textview"
         android:layout_centerHorizontal="true"
-        android:textColor="#ff7aff24"
+        android:textColor="#000000"
         android:textSize="35dp" />
 
 
