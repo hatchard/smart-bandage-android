@@ -19,7 +19,7 @@ import android.util.Log;
 
 public class SendData extends AsyncTask<JSONObject, JSONObject, JSONObject> {
 
-    String url = "http://www.jaredcuglietta.ca/login.php";
+    String url = "http://www.jaredcuglietta.ca/login.php"; //TODO no host name known right now
 
     @Override
     protected JSONObject doInBackground(JSONObject... data) {

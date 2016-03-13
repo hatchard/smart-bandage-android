@@ -15,8 +15,8 @@
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
-    <!-- To send data to the server need to access the internet-->
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- To send data to the server need to access the internet -->
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -24,7 +24,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme" >
-        <activity android:name=".DisplayBandageReadingsActivity" > //made an edit here for testing purposes
+        <activity android:name=".LoginActivity" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -33,12 +33,16 @@
         </activity>
         <activity android:name=".ConnectedDevicesActivity" />
         <activity android:name=".DeviceServiceViewActivity" />
-        <activity android:name=".MainActivity"/>
+        <activity android:name=".DisplayBandageReadingsActivity" />
+        <activity android:name=".MainActivity" />
 
         <service
             android:name=".SmartBandageConnService"
             android:enabled="true"
             android:exported="true" />
+
+
+
 
     </application>
 

@@ -49,9 +49,22 @@ public class MainActivity extends AppCompatActivity {
     Button scanBtn;
     private static final int SCAN_PERIOD = 10000;
     private Activity myself = this;
+    private ConnectedDevicesActivity connectedDevicesActivity;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        // I think this will have the start up page be the scanning page, unless there is already
+        // a connected device, in which case it will default to the bandage reading page
+
+        /*
+        if(findViewById(R.id.connectionStatus) != null) {
+            Intent intent = new Intent(this, DisplayBandageReadingsActivity.class);
+            startActivity(intent);
+        }
+        */
+
+
         setContentView(R.layout.activity_main);
         lv = (ListView) findViewById(R.id.deviceListView);
         smartBandageAdapter = new SmartBandageAdapter(this);
