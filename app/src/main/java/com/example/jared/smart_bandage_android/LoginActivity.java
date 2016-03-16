@@ -2,24 +2,13 @@ package com.example.jared.smart_bandage_android;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.Bundle;
 
 import android.text.TextUtils;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
-
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
-
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 
 public class LoginActivity extends Activity  {
     Button loginButton;
@@ -41,21 +30,18 @@ public class LoginActivity extends Activity  {
             }
         });
 
+        // I think this will have the start up page be the scanning page, unless there is already
+        // a connected device, in which case it will default to the bandage reading page
 
-        /*loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if(userName.getText().toString().equals("admin") &&
+        /*
+        if(findViewById(R.id.connectionStatus) != null) {
+            Intent intent = new Intent(this, DisplayBandageReadingsActivity.class);
+            startActivity(intent);
+        }
+        */
 
-                        password.getText().toString().equals("admin")) {
-                    Toast.makeText(getApplicationContext(), "Redirecting...",Toast.LENGTH_SHORT).show();
-                }
-                else{
-                    Toast.makeText(getApplicationContext(), "Wrong Credentials",Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-*/
+
+
     }
 
     private void attemptLogin() {

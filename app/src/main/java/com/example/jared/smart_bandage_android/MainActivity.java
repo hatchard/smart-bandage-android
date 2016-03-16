@@ -54,15 +54,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // I think this will have the start up page be the scanning page, unless there is already
-        // a connected device, in which case it will default to the bandage reading page
-
-        /*
-        if(findViewById(R.id.connectionStatus) != null) {
-            Intent intent = new Intent(this, DisplayBandageReadingsActivity.class);
-            startActivity(intent);
-        }
-        */
 
 
         setContentView(R.layout.activity_main);
@@ -85,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "Device still scanning");
                 } else {
                     Log.d(TAG, "Device No longer Scanning");
-                    final Intent intent = new Intent(myself, ConnectedDevicesActivity.class);
+                    final Intent intent = new Intent(myself, DisplayBandageReadingsActivity.class);
                     intent.putExtra(ConnectedDevicesActivity.DEVICE_LIST, rememberedSmartBandages);
                     startActivity(intent);
                 }

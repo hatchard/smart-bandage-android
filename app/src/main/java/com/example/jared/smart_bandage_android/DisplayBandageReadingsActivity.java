@@ -7,6 +7,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import org.json.JSONException;
@@ -19,6 +20,9 @@ import java.util.ArrayList;
 public class DisplayBandageReadingsActivity extends AppCompatActivity {
     //probably not the best way to do this
     Context context;
+    SendData sendData;
+    //EditText bandageID = (EditText) findViewById(R.id.bandageID);
+    String bandageID = "1234";
 
 
     @Override
@@ -26,6 +30,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_bandage_readings);
         context = this;
+        //android.os.Debug.waitForDebugger();
 
 
         // 1. pass context and data to the custom adapter
@@ -38,17 +43,8 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         listView.setAdapter(adapter);// if extending Activity
        // setListAdapter(adapter);
 
-        try {
-            JSONObject toSend = new JSONObject();
-            toSend.put("msg", "hello");
-
-            SendData transmitter = new SendData();
-            transmitter.execute(new JSONObject[] {toSend});
-
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
+        sendData = new SendData();
+        sendData.insert();
 
     }
 
