@@ -67,9 +67,9 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_connected_devices);
 
         deviceList = (HashMap<String,SmartBandage>) getIntent().getSerializableExtra(DEVICE_LIST);
-        if(deviceList == null) {
+       /* if(deviceList == null) {
             deviceList = new HashMap<String, SmartBandage>();
-        }
+        }*/
 
         deviceListview = (ListView)findViewById(R.id.listView);
         deviceConnectionStatus = new HashMap<String,SmartBandage>();

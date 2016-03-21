@@ -53,9 +53,12 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
 
+    private boolean doSingleWrite = false;
+
     BluetoothGatt mBluetoothGatt;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.w("why", "in on create");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_service_view);
         Toast.makeText(DeviceServiceViewActivity.this, "Discovering Services", Toast.LENGTH_SHORT).show();
@@ -68,7 +71,7 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
         serviceListView = (ExpandableListView)findViewById(R.id.expandableListView);
         serviceListView.setOnChildClickListener(servicesListClickListner);
         mBluetoothGatt = bluetoothAdapter.getRemoteDevice(sm.getBandageAddress()).connectGatt(this,true,myCallback);
-
+        Log.w("why", "end of on create");
 
 
     }
@@ -95,6 +98,7 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
                         mBluetoothGatt.discoverServices());
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                gatt.setCharacteristicNotification(gatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE).getCharacteristic(SmartBandageGatt.UUID_READINGS), false);
                 intentAction = ACTION_GATT_DISCONNECTED;
                 Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
@@ -122,6 +126,20 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+        }
+
+        //copied from mike
+        @Override
+        public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                System.out.println("Application MTU size updated: " + Integer.toString(mtu));
+
+                SetEnableCharacteristicNotifications(
+                        gatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE)
+                                .getCharacteristic(SmartBandageGatt.UUID_READINGS), true);
+            } else {
+                System.err.println("Application MTU size update failed. Current MTU: " + Integer.toString(mtu));
+            }
         }
     };
 
@@ -167,6 +185,98 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
             final int heartRate = characteristic.getIntValue(format, 1);
             Log.d(TAG, String.format("Received heart rate: %d", heartRate));
             intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
+        } else if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Temperature Value") {
+            final byte[] data = characteristic.getValue();
+            final StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("Temperatures: \n");
+            for (int i = 0; i < data.length/2; ++i) {
+                stringBuilder.append((((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.);
+                stringBuilder.append(" C\n");
+            }
+            intent.putExtra(EXTRA_DATA, stringBuilder.toString());
+        } else if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Humidity Value") {
+            final byte[] data = characteristic.getValue();
+            final StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("Humidity: \n");
+            for (int i = 0; i < data.length/2; ++i) {
+                stringBuilder.append((((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.);
+                stringBuilder.append("%RH\n");
+            }
+            intent.putExtra(EXTRA_DATA, stringBuilder.toString());
+        } else if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Battery Charge") {
+            final byte[] data = characteristic.getValue();
+            final StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("Battery Voltage: \n");
+            for (int i = 0; i < data.length/2; ++i) {
+                stringBuilder.append((((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.);
+                stringBuilder.append("mv\n");
+            }
+            intent.putExtra(EXTRA_DATA, stringBuilder.toString());
+        } else if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Reading Size") {
+            final byte[] data = characteristic.getValue();
+            final StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("Reading Size: \n");
+            for (int i = 0; i < data.length/2; ++i) {
+                stringBuilder.append((((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i]))));
+                stringBuilder.append("bytes\n");
+            }
+            intent.putExtra(EXTRA_DATA, stringBuilder.toString());
+        } else if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Reading Count") {
+            final byte[] data = characteristic.getValue();
+            final StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("Number of Available Readings: \n");
+            int value = 0;
+            for (int i = 0; i < data.length; ++i) {
+                value |= (0x0FF & data[i]) << (8 * i);
+//                stringBuilder.append((((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[i]))));
+            }
+            stringBuilder.append(value);
+            stringBuilder.append("\n");
+            intent.putExtra(EXTRA_DATA, stringBuilder.toString());
+        } else if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Readings") {
+            final byte[] data = characteristic.getValue();
+
+            int value = 0;
+            for (int i = 0; i < (data.length)/22; ++i) {
+                final StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append("Reading ");
+                stringBuilder.append(i);
+                stringBuilder.append("  ");
+
+                for (int j = 0; j < 9; ++j) {
+                    stringBuilder.append((((0x0FF & data[2*j+1 + i*22]) << 8 | (0x0FF & data[2*j + i*22])))/16.);
+                    stringBuilder.append("  ");
+                }
+
+                stringBuilder.append("Time: ");
+                stringBuilder.append((((0x0FF & data[i*22 + 21]) << 8 | (0x0FF & data[i*22 + 20]))));
+                System.out.println(stringBuilder.toString());
+            }
+
+            if (doSingleWrite && data != null && data.length > 0) {
+                doSingleWrite = false;
+                final BluetoothGattCharacteristic writeChar =
+                        mGattCharacteristics.get(2).get(10);
+                byte[] v = new byte[2];
+                v[0] = 22;
+                v[1] = 0;
+                writeChar.setValue(v);
+                if ((writeChar.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) > 0) {
+                    if (mBluetoothGatt.writeCharacteristic(writeChar)) {
+                        System.out.println("Started BLE write OK");
+                    } else {
+                        System.out.println("BLE Write failed");
+                    }
+                } else if ((writeChar.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE) > 0) {
+                    if (mBluetoothGatt.writeCharacteristic(writeChar)) {
+                        System.out.println("Started BLE write_no_resp OK");
+                    } else {
+                        System.out.println("BLE write_no_resp failed");
+                    }
+                } else {
+                    System.out.println("Characteristic not writeable");
+                }
+            }
         } else {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
@@ -246,6 +356,8 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
         return intentFilter;
     }
 
+    //copied from mike
+    private static final UUID CONFIG_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb"); //to here
     private final ExpandableListView.OnChildClickListener servicesListClickListner =
             new ExpandableListView.OnChildClickListener() {
                 @Override
@@ -256,23 +368,47 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
                                 mGattCharacteristics.get(groupPosition).get(childPosition);
                         final int charaProp = characteristic.getProperties();
                         if ((charaProp | BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-                            // If there is an active notification on a characteristic, clear
-                            // it first so it doesn't update the data field on the user interface.
-                            if (mNotifyCharacteristic != null) {
-                                mBluetoothGatt.setCharacteristicNotification(
-                                        mNotifyCharacteristic, false);
-                                mNotifyCharacteristic = null;
-                            }
                             mBluetoothGatt.readCharacteristic(characteristic);
-                        }
-                        if ((charaProp | BluetoothGattCharacteristic.PROPERTY_NOTIFY) > 0) {
-                            mNotifyCharacteristic = characteristic;
-                            mBluetoothGatt.setCharacteristicNotification(
-                                    characteristic, true);
                         }
                         return true;
                     }
                     return false;
                 }
             };
+    //copied from mike --> to the end
+    private boolean ReadReadingsCharacteristic() {
+        doSingleWrite = true;
+        return mBluetoothGatt.readCharacteristic(mBluetoothGatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE).getCharacteristic(SmartBandageGatt.UUID_READINGS));
+    }
+
+    private boolean SetEnableCharacteristicNotifications(BluetoothGattCharacteristic characteristic, boolean enable) {
+        if (enable) {
+            System.out.println("Enabling notifications for characteristic " + characteristic.getUuid().toString());
+        } else {
+            System.out.println("Disabling notifications for characteristic " + characteristic.getUuid().toString());
+        }
+
+//        mNotifyCharacteristic = characteristic;
+        mBluetoothGatt.setCharacteristicNotification(characteristic, true);
+
+        final BluetoothGattDescriptor desc = characteristic.getDescriptor(CONFIG_DESCRIPTOR);
+        if (null == desc) {
+            System.err.println("Failed to get config descriptor");
+            return false;
+        }
+
+        if (!desc.setValue(enable ? BluetoothGattDescriptor.ENABLE_INDICATION_VALUE : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)) {
+            System.err.println("Failed to set notification value");
+            return false;
+        }
+
+        if (!mBluetoothGatt.writeDescriptor(desc)) {
+            System.err.println("Failed to set descriptor");
+            return false;
+        }
+
+        System.out.println("Characteristic descriptor written");
+
+        return true;
+    }
 }

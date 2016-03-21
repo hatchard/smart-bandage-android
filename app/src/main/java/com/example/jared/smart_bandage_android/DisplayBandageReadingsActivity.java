@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -14,7 +15,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-
+import java.util.HashMap;
 
 
 public class DisplayBandageReadingsActivity extends AppCompatActivity {
@@ -23,6 +24,8 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     SendData sendData;
     //EditText bandageID = (EditText) findViewById(R.id.bandageID);
     String bandageID = "1234";
+    public static String DEVICE_LIST ="deviceList";
+    public static HashMap<String,SmartBandage> deviceList;
 
 
     @Override
@@ -31,7 +34,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_display_bandage_readings);
         context = this;
         //android.os.Debug.waitForDebugger();
-
+        deviceList = (HashMap<String,SmartBandage>) getIntent().getSerializableExtra(DEVICE_LIST);
 
         // 1. pass context and data to the custom adapter
         BandageReadingAdapter adapter = new BandageReadingAdapter(this, generateData());
@@ -105,7 +108,10 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
 
     public void viewAdvancedView(){
+        Log.w("why", "about to go to DeviceServiceViewActivity");
         Intent intent = new Intent(this, ConnectedDevicesActivity.class);
+        intent.putExtra(ConnectedDevicesActivity.DEVICE_LIST, deviceList);
+       // Intent intent = new Intent(this, DeviceServiceViewActivity.class);
         startActivity(intent);
     }
 

@@ -176,6 +176,27 @@ public class SmartBandageConnService extends Service {
             intent.setAction(CustomActions.SYS_TIME_DATA_AVAILABLE);
             intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
 
+        } else if (SampleGattAttributes.SMART_BANDAGE_READINGS.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.SMART_BANDAGE_READINGS_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
+
+        } else if (SampleGattAttributes.SMART_BANDAGE_READING_SIZE.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.SMART_BANDAGE_READING_SIZE_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
+
+        } else if (SampleGattAttributes.SMART_BANDAGE_READING_COUNT.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.SMART_BANDAGE_READING_COUNT_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
+
+        } else if (SampleGattAttributes.SMART_BANDAGE_GREFT_TIME.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.SMART_BANDAGE_GREFT_TIME_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
+
+        } else if (SampleGattAttributes.SMART_BANDAGE_DATA_OFFSETS.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.SMART_BANDAGE_DATA_OFFSETS_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
+
+
         } else {
 
         }
