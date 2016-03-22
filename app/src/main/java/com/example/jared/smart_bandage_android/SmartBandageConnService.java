@@ -24,6 +24,8 @@ import java.util.UUID;
 public class SmartBandageConnService extends Service {
     private static final String TAG = SmartBandageConnService.class.getSimpleName();
     private static final String EXTRA_DATA = "EXTRA_DATA";
+    public final static String ACTION_GATT_SERVICES_DISCOVERED =
+            "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     HashMap<String,SmartBandage> rememberedBandages;
     BluetoothAdapter bluetoothAdapter;
     public SmartBandageConnService() {
@@ -85,16 +87,16 @@ public class SmartBandageConnService extends Service {
         super.onDestroy();
     }
 
-    private BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
+    public BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i(TAG, "Connected to GATT server.");
+                Log.i(TAG, "Connected to GATT server in service.");
                 // Attempts to discover services after successful connection.
                 Log.i(TAG, "Attempting to start service discovery:" +
                         gatt.discoverServices());
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.i(TAG, "Disconnected from GATT server.");
+                Log.i(TAG, "Disconnected from GATT server in service.");
 
             }
         }
@@ -103,6 +105,7 @@ public class SmartBandageConnService extends Service {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.i(TAG, "Services Discovered YAAY");
+                broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
 
                 BluetoothGattService service = gatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
                 List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
@@ -139,6 +142,11 @@ public class SmartBandageConnService extends Service {
             broadcastUpdate(characteristic);
         }
     };
+
+    private void broadcastUpdate(final String action) {
+        final Intent intent = new Intent(action);
+        sendBroadcast(intent);
+    }
 
     private void broadcastUpdate(final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent();
