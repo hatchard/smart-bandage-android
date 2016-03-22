@@ -1,7 +1,9 @@
 package com.example.jared.smart_bandage_android;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -10,6 +12,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -26,6 +29,19 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     String bandageID = "1234";
     public static String DEVICE_LIST ="deviceList";
     public static HashMap<String,SmartBandage> deviceList;
+
+    public final static String BANDAGE = "BANDAGE";
+
+    public final static String ACTION_GATT_CONNECTED =
+            "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
+    public final static String ACTION_GATT_DISCONNECTED =
+            "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED";
+    public final static String ACTION_GATT_SERVICES_DISCOVERED =
+            "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
+    public final static String ACTION_DATA_AVAILABLE =
+            "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
+    public final static String EXTRA_DATA =
+            "com.example.bluetooth.le.EXTRA_DATA";
 
 
     @Override
@@ -52,6 +68,12 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(mGattUpdateReceiver,makeGattUpdateIntentFilter());
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.sb_menu, menu);
@@ -75,6 +97,24 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+            if (ACTION_GATT_CONNECTED.equals(action)) {
+
+            } else if (ACTION_GATT_DISCONNECTED.equals(action)) {
+
+            } else if (ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                // Show all the supported services and characteristics on the user interface.
+                //displayGattServices(mBluetoothGatt.getServices());
+
+            } else if (ACTION_DATA_AVAILABLE.equals(action)) {
+                Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
+            }
+        }
+    };
 
     // Get the data to display in the Activity.
     public String getTemperatureData() {
@@ -113,6 +153,15 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         intent.putExtra(ConnectedDevicesActivity.DEVICE_LIST, deviceList);
        // Intent intent = new Intent(this, DeviceServiceViewActivity.class);
         startActivity(intent);
+    }
+
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ACTION_GATT_CONNECTED);
+        intentFilter.addAction(ACTION_GATT_DISCONNECTED);
+        intentFilter.addAction(ACTION_GATT_SERVICES_DISCOVERED);
+        intentFilter.addAction(ACTION_DATA_AVAILABLE);
+        return intentFilter;
     }
 
 
