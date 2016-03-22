@@ -85,7 +85,6 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
     }
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
-
     private final BluetoothGattCallback myCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -161,7 +160,6 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
             }
         }
     };
-
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
         sendBroadcast(intent);
