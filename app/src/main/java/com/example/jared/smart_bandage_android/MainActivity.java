@@ -53,7 +53,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        if(findViewById(R.id.connectionStatus) != null) {
+            Intent intent = new Intent(this, DisplayBandageReadingsActivity.class);
+            startActivity(intent);
+        }
 
 
         setContentView(R.layout.activity_main);
@@ -98,6 +101,8 @@ public class MainActivity extends AppCompatActivity {
 
         myBandages = new HashMap<String,SmartBandage>();
         fileIO = new FileIO();
+
+
     }
 
     @Override

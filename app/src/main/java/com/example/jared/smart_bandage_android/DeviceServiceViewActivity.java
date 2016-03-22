@@ -58,7 +58,6 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
     BluetoothGatt mBluetoothGatt;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.w("why", "in on create");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_device_service_view);
         Toast.makeText(DeviceServiceViewActivity.this, "Discovering Services", Toast.LENGTH_SHORT).show();
@@ -70,8 +69,7 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
         bluetoothAdapter = bluetoothManager.getAdapter();
         serviceListView = (ExpandableListView)findViewById(R.id.expandableListView);
         serviceListView.setOnChildClickListener(servicesListClickListner);
-        mBluetoothGatt = bluetoothAdapter.getRemoteDevice(sm.getBandageAddress()).connectGatt(this,true,myCallback);
-        Log.w("why", "end of on create");
+        //mBluetoothGatt = bluetoothAdapter.getRemoteDevice(sm.getBandageAddress()).connectGatt(this,true,myCallback);
 
 
     }
@@ -85,6 +83,7 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
     }
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
+
     private final BluetoothGattCallback myCallback = new BluetoothGattCallback() {
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
@@ -107,6 +106,7 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                mBluetoothGatt.requestMtu(256);
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
@@ -118,17 +118,49 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                System.out.println("BLE read success " + characteristic.getUuid().toString());
                 broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+            } else {
+                System.err.println("BLE read failed");
+            }
+        }
+
+        //copied from mike
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt,
+                                          BluetoothGattCharacteristic characteristic, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                System.out.println("BLE write succeeded");
+                // Re-read
+//                if (mBluetoothGatt.readCharacteristic(mGattCharacteristics.get(2).get(8))) {
+//                    System.out.println("Secondary read started...");
+//                } else {
+//                    System.err.println("Secondary write failed...");
+//                }
+            } else {
+                System.err.println("BLE write failed");
             }
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
+            System.out.println("BLE data updated " + characteristic.getUuid().toString());
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
         }
 
         //copied from mike
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor,
+                                      int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                System.out.println("Bluetooth descriptor write success: " + descriptor.getUuid().toString());
+            } else {
+                System.err.println("Bluetooth descriptor write failed: " + descriptor.getUuid().toString());
+            }
+        }
+
+
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {

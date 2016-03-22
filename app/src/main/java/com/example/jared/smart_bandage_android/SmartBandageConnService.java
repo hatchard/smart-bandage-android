@@ -140,6 +140,8 @@ public class SmartBandageConnService extends Service {
         }
     };
 
+
+
     private void broadcastUpdate(final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent();
 
