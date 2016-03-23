@@ -26,6 +26,7 @@ import java.util.UUID;
 public class SmartBandageConnService extends Service {
     private static final String TAG = SmartBandageConnService.class.getSimpleName();
     HashMap<String,SmartBandage> rememberedBandages;
+    public boolean readingsAvailable = false; //is set to true when there are historical readings available
     BluetoothAdapter bluetoothAdapter;
     Queue<Intent> broadcastQueue = new LinkedList<>();
     Queue<BluetoothGattDescriptor>  bleQueue = new LinkedList<>();
@@ -117,6 +118,18 @@ public class SmartBandageConnService extends Service {
                         broadcastUpdate(ACTION_GATT_CONNECTED);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.i(TAG, "Disconnected from GATT server in service.");
+                // Disable notificiations upon disconnect
+                BluetoothGattService service = gatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
+                List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
+                for ( BluetoothGattCharacteristic chara : charas){
+                    Log.i(TAG, SampleGattAttributes.lookup(chara.getUuid().toString(), "UNKNOWN"));
+                    gatt.setCharacteristicNotification(chara, true);
+                    List<BluetoothGattDescriptor> descriptors = chara.getDescriptors();
+                    for (BluetoothGattDescriptor descriptor : descriptors) {
+                        descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                        gatt.writeDescriptor(descriptor);
+                    }
+                }
                 broadcastUpdate(ACTION_GATT_DISCONNECTED);
 
             }
@@ -164,6 +177,22 @@ public class SmartBandageConnService extends Service {
                     System.out.println("More to read");
                     readingCharacteristic(bleReadQueue);
                 }
+                if (readingsAvailable) {
+                    readingsAvailable = false;
+                    //after you have read all of the current characteristics, can enable notifications
+                    BluetoothGattService service = gatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
+                    List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
+                    for (BluetoothGattCharacteristic chara : charas) {
+                        Log.i(TAG, SampleGattAttributes.lookup(chara.getUuid().toString(), "UNKNOWN"));
+                        gatt.setCharacteristicNotification(chara, true);
+                        List<BluetoothGattDescriptor> descriptors = chara.getDescriptors();
+                        for (BluetoothGattDescriptor descriptor : descriptors) {
+                            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                            gatt.writeDescriptor(descriptor);
+                        }
+                    }
+                }
+
             } else {
                 System.err.println("BLE read failed");
             }
@@ -328,24 +357,25 @@ public class SmartBandageConnService extends Service {
 
         }
 
-        /*
-        if (SampleGattAttributes.SMART_BANDAGE_READINGS.equals(characteristic.getUuid())){
+
+        if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Readings"){
+            readingsAvailable = true;
             intent.setAction(CustomActions.SMART_BANDAGE_READINGS_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseReadings(characteristic.getValue()));
             broadcastQueue.add(intent);
 
         }
 
-        if (SampleGattAttributes.SMART_BANDAGE_READING_SIZE.equals(characteristic.getUuid())){
+        if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Reading Size"){
             intent.setAction(CustomActions.SMART_BANDAGE_READING_SIZE_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseReadingSize(characteristic.getValue()));
             broadcastQueue.add(intent);
 
         }
 
-        if (SampleGattAttributes.SMART_BANDAGE_READING_COUNT.equals(characteristic.getUuid())){
+        if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Reading Count"){
             intent.setAction(CustomActions.SMART_BANDAGE_READING_COUNT_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseReadingCount(characteristic.getValue()));
             broadcastQueue.add(intent);
 
         }
@@ -362,7 +392,7 @@ public class SmartBandageConnService extends Service {
             intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
             broadcastQueue.add(intent);
 
-        }*/
+        }
         /*
         while (broadcastQueue.size() != 0) {
             intent = broadcastQueue.remove();

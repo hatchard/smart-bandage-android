@@ -13,11 +13,6 @@ package com.example.jared.smart_bandage_android;
         import android.view.MenuItem;
         import android.widget.EditText;
         import android.widget.ListView;
-        import android.widget.Toast;
-
-        import org.json.JSONException;
-        import org.json.JSONObject;
-
         import java.util.ArrayList;
         import java.util.HashMap;
 
@@ -30,9 +25,8 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     String tempData;
     String humidityData;
     String moistureData;
-
     //EditText bandageID = (EditText) findViewById(R.id.bandageID);
-    String bandageID = "1234";
+   // String bandageID = "1234";
     public static String DEVICE_LIST ="deviceList";
     public static HashMap<String,SmartBandage> deviceList;
 
@@ -46,14 +40,6 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE =
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
-
-    public DisplayBandageReadingsActivity(String humidityData, String moistureData, String bandageID) {
-        this.humidityData = humidityData;
-        this.moistureData = moistureData;
-        this.bandageID = bandageID;
-    }
-
-    public DisplayBandageReadingsActivity(){};
 
 
     @Override

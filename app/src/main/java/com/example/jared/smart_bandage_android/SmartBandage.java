@@ -123,4 +123,45 @@ public class SmartBandage implements Serializable{
 
         return 1;
     }
+
+    public static String parseReadingSize(byte[] data) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Reading Size: \n");
+        for (int i = 0; i < data.length/2; ++i) {
+            stringBuilder.append((((0x0FF & data[2 * i + 1]) << 8 | (0x0FF & data[2 * i]))));
+            stringBuilder.append("bytes\n");
+        }
+        return stringBuilder.toString();
+    }
+
+    public static String parseReadingCount(byte[] data) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Number of Available Readings: \n");
+        int value = 0;
+        for (int i = 0; i < data.length; ++i) {
+            value |= (0x0FF & data[i]) << (8 * i);
+        }
+        stringBuilder.append(value);
+        stringBuilder.append("bytes\n");
+        return stringBuilder.toString();
+    }
+
+    public static String parseReadings(byte[] data) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        for (int i = 0; i < (data.length)/22; ++i) {
+            stringBuilder.append("Reading ");
+            stringBuilder.append(i);
+            stringBuilder.append("  ");
+
+            for (int j = 0; j < 9; ++j) {
+                stringBuilder.append((((0x0FF & data[2*j+1 + i*22]) << 8 | (0x0FF & data[2*j + i*22])))/16.);
+                stringBuilder.append("  ");
+            }
+
+            stringBuilder.append("Time: ");
+            stringBuilder.append((((0x0FF & data[i*22 + 21]) << 8 | (0x0FF & data[i*22 + 20]))));
+            System.out.println(stringBuilder.toString());
+        }
+        return stringBuilder.toString();
+    }
 }
