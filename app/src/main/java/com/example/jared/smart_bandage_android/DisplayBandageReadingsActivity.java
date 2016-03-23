@@ -89,6 +89,12 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         return true;
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mGattUpdateReceiver);
+    }
+
 
     // Couldn't get this working in the onClick
     // TODO look into it

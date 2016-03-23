@@ -29,7 +29,7 @@ public class SmartBandageConnService extends Service {
     BluetoothAdapter bluetoothAdapter;
     Queue<Intent> broadcastQueue = new LinkedList<>();
     Queue<BluetoothGattDescriptor>  bleQueue = new LinkedList<>();
-    Queue<BluetoothGattCharacteristic> bleReadQueue = new LinkedList<>();
+    public Queue<BluetoothGattCharacteristic> bleReadQueue = new LinkedList<>();
     BluetoothGatt mBluetoothGatt;
     public final static String ACTION_GATT_CONNECTED =
             "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
@@ -146,14 +146,7 @@ public class SmartBandageConnService extends Service {
                 for ( BluetoothGattCharacteristic chara : charas){
                     bleReadQueue.add(chara);
                 }
-
-                while (bleReadQueue.size() != 0 ) {
-                    if(flag == true) {
-                        flag = false;
-                        bluetoothGattCharacteristic = bleReadQueue.remove();
-                        flag = readingCharacteristic(bluetoothGattCharacteristic);
-                    }
-                }
+                readingCharacteristic(bleReadQueue);
 
             } else {
                 System.err.println("Application MTU size update failed. Current MTU: " + Integer.toString(mtu));
@@ -167,6 +160,10 @@ public class SmartBandageConnService extends Service {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 System.out.println("BLE read success " + characteristic.getUuid().toString());
                 broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+                if(bleReadQueue.peek()!= null) {
+                    System.out.println("More to read");
+                    readingCharacteristic(bleReadQueue);
+                }
             } else {
                 System.err.println("BLE read failed");
             }
@@ -218,7 +215,9 @@ public class SmartBandageConnService extends Service {
     };
 
 
-    private boolean readingCharacteristic(BluetoothGattCharacteristic characteristic) {
+    private boolean readingCharacteristic(Queue<BluetoothGattCharacteristic> characteristicQueue) {
+        BluetoothGattCharacteristic characteristic;
+        characteristic = characteristicQueue.remove();
         mBluetoothGatt.readCharacteristic(characteristic);
         System.out.println("Characteristic read");
 
