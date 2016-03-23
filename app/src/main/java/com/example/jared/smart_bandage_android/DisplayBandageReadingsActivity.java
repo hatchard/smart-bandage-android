@@ -25,6 +25,10 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     //probably not the best way to do this
     Context context;
     SendData sendData;
+    String tempData;
+    String humidityData;
+    String moistureData;
+
     //EditText bandageID = (EditText) findViewById(R.id.bandageID);
     String bandageID = "1234";
     public static String DEVICE_LIST ="deviceList";
@@ -47,6 +51,13 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     public static final String BANDAGE_HUMIDITY_AVAILABLE = "com.example.smart_bandage_android.BANDAGE_HUMIDITY_AVAILABLE";
     public static final String MOISTURE_DATA_AVAILABLE = "com.example.smart_bandage_android.MOISTURE_DATA_AVAILABLE";
 
+    public DisplayBandageReadingsActivity(String humidityData, String moistureData, String bandageID) {
+        this.humidityData = humidityData;
+        this.moistureData = moistureData;
+        this.bandageID = bandageID;
+    }
+
+    public DisplayBandageReadingsActivity(){};
 
 
     @Override
@@ -57,15 +68,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         //android.os.Debug.waitForDebugger();
         deviceList = (HashMap<String,SmartBandage>) getIntent().getSerializableExtra(DEVICE_LIST);
 
-        // 1. pass context and data to the custom adapter
-        BandageReadingAdapter adapter = new BandageReadingAdapter(this, generateData());
-
-        // if extending Activity 2. Get ListView from activity_main.xml
-        ListView listView = (ListView) findViewById(R.id.listView);
-
-        // 3. setListAdapter
-        listView.setAdapter(adapter);// if extending Activity
-       // setListAdapter(adapter);
+        updateActivity();
 
         sendData = new SendData();
         sendData.insert();
@@ -75,7 +78,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(mGattUpdateReceiver,makeGattUpdateIntentFilter());
+        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
     }
 
     @Override
@@ -117,30 +120,44 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
             } else if (ACTION_DATA_AVAILABLE.equals(action)) {
                // Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
-            } if (BANDAGE_TEMP_AVAILABLE.equals(action)) {
-                Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(BANDAGE_TEMP_AVAILABLE), Toast.LENGTH_SHORT).show();
             }
+
+            if (BANDAGE_TEMP_AVAILABLE.equals(action)) {
+                Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
+                setTempData(intent.getStringExtra(EXTRA_DATA));
+            }
+
+            if (BANDAGE_HUMIDITY_AVAILABLE.equals(action)) {
+                Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
+                setHumidityData(intent.getStringExtra(EXTRA_DATA));
+            }
+
+            if (MOISTURE_DATA_AVAILABLE.equals(action)) {
+                Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
+                setMoistureData(intent.getStringExtra(EXTRA_DATA));
+            }
+            updateActivity();
+
         }
     };
 
-    // Get the data to display in the Activity.
-    public String getTemperatureData() {
 
-        return "hot";
+    public void updateActivity(){
+        // 1. pass context and data to the custom adapter
+        BandageReadingAdapter adapter = new BandageReadingAdapter(this, generateData());
+
+        // if extending Activity 2. Get ListView from activity_main.xml
+        ListView listView = (ListView) findViewById(R.id.listView);
+
+        // 3. setListAdapter
+        listView.setAdapter(adapter);// if extending Activity
+        // setListAdapter(adapter);
     }
 
-    public String getHumidityData() {
-
-        return "humid";
-    }
-
-    public String getMoistureData() {
-        return "wet";
-    }
 
     private ArrayList<DisplayModel> generateData(){
         ArrayList<DisplayModel> models = new ArrayList<DisplayModel>();
-        models.add(new DisplayModel(R.drawable.thermometer,"Temperature: ", getTemperatureData()));
+        models.add(new DisplayModel(R.drawable.thermometer,"Temperature: ", getTempData()));
         models.add(new DisplayModel(R.drawable.cloud,"Humidity: ", getHumidityData()));
         models.add(new DisplayModel(R.drawable.raindrop, "Moisture: ", getMoistureData()));
 
@@ -176,5 +193,28 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     }
 
 
+    public String getTempData() {
+        return tempData;
+    }
+
+    public void setTempData(String tempData) {
+        this.tempData = tempData;
+    }
+
+    public String getHumidityData() {
+        return humidityData;
+    }
+
+    public void setHumidityData(String humidityData) {
+        this.humidityData = humidityData;
+    }
+
+    public String getMoistureData() {
+        return moistureData;
+    }
+
+    public void setMoistureData(String moistureData) {
+        this.moistureData = moistureData;
+    }
 }
 

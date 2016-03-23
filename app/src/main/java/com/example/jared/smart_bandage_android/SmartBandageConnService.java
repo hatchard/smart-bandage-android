@@ -18,13 +18,17 @@ import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.UUID;
 
 public class SmartBandageConnService extends Service {
     private static final String TAG = SmartBandageConnService.class.getSimpleName();
     HashMap<String,SmartBandage> rememberedBandages;
     BluetoothAdapter bluetoothAdapter;
+    Queue<Intent> broadcastQueue = new LinkedList<>();
+    Queue<BluetoothGattDescriptor>  bleQueue = new LinkedList<>();
     BluetoothGatt mBluetoothGatt;
     public final static String ACTION_GATT_CONNECTED =
             "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
@@ -123,6 +127,7 @@ public class SmartBandageConnService extends Service {
                 Log.i(TAG, "Services Discovered YAAY");
                 gatt.requestMtu(256);
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
+                /*
                 BluetoothGattService service = gatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
                 List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
                 for ( BluetoothGattCharacteristic chara : charas){
@@ -137,7 +142,7 @@ public class SmartBandageConnService extends Service {
                       //  }
 
                     }
-                }
+                }*/
 
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
@@ -146,11 +151,34 @@ public class SmartBandageConnService extends Service {
 
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+            BluetoothGattDescriptor bluetoothGattDescriptor;
+            boolean flag = true;
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 System.out.println("Application MTU size updated from service: " + Integer.toString(mtu));
+
+                BluetoothGattService service = mBluetoothGatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
+                List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
+                for ( BluetoothGattCharacteristic chara : charas){
+                    Log.i(TAG, SampleGattAttributes.lookup(chara.getUuid().toString(), "UNKNOWN"));
+                    mBluetoothGatt.setCharacteristicNotification(chara, true);
+                    List<BluetoothGattDescriptor> descriptors = chara.getDescriptors();
+                    for (BluetoothGattDescriptor descriptor : descriptors) {
+                        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                        bleQueue.add(descriptor);
+                        mBluetoothGatt.writeDescriptor(descriptor);
+
+                    }
+                }
+
+                while (bleQueue.size() != 0 ) {
+                    if(flag == true) {
+                        bluetoothGattDescriptor = bleQueue.remove();
+                        flag = writingDescriptor(bluetoothGattDescriptor);
+                    }
+                }
                // SetEnableCharacteristicNotifications(
-               //        gatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE)
-               //                 .getCharacteristic(SmartBandageGatt.UUID_READINGS), true);
+                 //      gatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE)
+                   //             .getCharacteristic(SmartBandageGatt.UUID_READINGS), true);
 
             } else {
                 System.err.println("Application MTU size update failed. Current MTU: " + Integer.toString(mtu));
@@ -214,9 +242,21 @@ public class SmartBandageConnService extends Service {
         }
     };
 
-   /*
-   // private static final UUID CONFIG_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
-    private boolean SetEnableCharacteristicNotifications(BluetoothGattCharacteristic characteristic, boolean enable, ) {
+
+    private boolean writingDescriptor(BluetoothGattDescriptor descriptor) {
+        if (!mBluetoothGatt.writeDescriptor(descriptor)) {
+            System.err.println("Failed to set descriptor");
+            return false;
+        }
+
+        System.out.println("Characteristic descriptor written");
+
+        return true;
+    }
+
+    /*
+    private boolean SetEnableCharacteristicNotifications(BluetoothGattCharacteristic characteristic, boolean enable ) {
+
         if (enable) {
             System.out.println("Enabling notifications for characteristic " + characteristic.getUuid().toString());
         } else {
@@ -253,65 +293,102 @@ public class SmartBandageConnService extends Service {
     }
 
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
-        final Intent intent = new Intent();
+         Intent intent = new Intent();
 
         if (SampleGattAttributes.SMART_BANDAGE_TEMP.equals(characteristic.getUuid())) {
             Log.i(TAG,"TEMP: " + characteristic.getValue().toString());
             intent.setAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
-            intent.putExtra("EXTRA_DATA",SmartBandage.parseTemp(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_HUMIDITY.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseHumidity(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_ID.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.BANDAGE_ID_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseID(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_STATE.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.BANDAGE_STATE_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseState(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_BATTERY_CHRG.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.BANDAGE_BATT_CHRG_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseBattery(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_EXTERNAL_POWER.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.EXT_POWER_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseExtPower(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_MOISTURE_MAP.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.MOISTURE_DATA_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseMoisture(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_SYS_TIME.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.SYS_TIME_DATA_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_READINGS.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.SMART_BANDAGE_READINGS_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_READING_SIZE.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.SMART_BANDAGE_READING_SIZE_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_READING_COUNT.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.SMART_BANDAGE_READING_COUNT_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_GREFT_TIME.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.SMART_BANDAGE_GREFT_TIME_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_DATA_OFFSETS.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.SMART_BANDAGE_DATA_OFFSETS_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
-
-
-        } else {
+            intent.putExtra("EXTRA_DATA",SmartBandage.parseTemp(characteristic.getValue()));
+            broadcastQueue.add(intent);
 
         }
-        sendBroadcast(intent);
+
+        if (SampleGattAttributes.SMART_BANDAGE_HUMIDITY.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseHumidity(characteristic.getValue()));
+            broadcastQueue.add(intent);
+
+        }
+
+        if (SampleGattAttributes.SMART_BANDAGE_ID.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.BANDAGE_ID_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseID(characteristic.getValue()));
+            broadcastQueue.add(intent);
+
+        }
+
+        if (SampleGattAttributes.SMART_BANDAGE_STATE.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.BANDAGE_STATE_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseState(characteristic.getValue()));
+            broadcastQueue.add(intent);
+
+        }
+
+        if (SampleGattAttributes.SMART_BANDAGE_BATTERY_CHRG.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.BANDAGE_BATT_CHRG_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseBattery(characteristic.getValue()));
+            broadcastQueue.add(intent);
+
+        }
+
+        if (SampleGattAttributes.SMART_BANDAGE_EXTERNAL_POWER.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.EXT_POWER_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseExtPower(characteristic.getValue()));
+            broadcastQueue.add(intent);
+
+        }
+
+        if (SampleGattAttributes.SMART_BANDAGE_MOISTURE_MAP.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.MOISTURE_DATA_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseMoisture(characteristic.getValue()));
+            broadcastQueue.add(intent);
+
+        }
+
+        if (SampleGattAttributes.SMART_BANDAGE_SYS_TIME.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.SYS_TIME_DATA_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
+            broadcastQueue.add(intent);
+
+        }
+
+        if (SampleGattAttributes.SMART_BANDAGE_READINGS.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.SMART_BANDAGE_READINGS_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
+            broadcastQueue.add(intent);
+
+        }
+
+        if (SampleGattAttributes.SMART_BANDAGE_READING_SIZE.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.SMART_BANDAGE_READING_SIZE_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
+            broadcastQueue.add(intent);
+
+        }
+
+        if (SampleGattAttributes.SMART_BANDAGE_READING_COUNT.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.SMART_BANDAGE_READING_COUNT_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
+            broadcastQueue.add(intent);
+
+        }
+
+        if (SampleGattAttributes.SMART_BANDAGE_GREFT_TIME.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.SMART_BANDAGE_GREFT_TIME_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
+            broadcastQueue.add(intent);
+
+        }
+
+        if (SampleGattAttributes.SMART_BANDAGE_DATA_OFFSETS.equals(characteristic.getUuid())){
+            intent.setAction(CustomActions.SMART_BANDAGE_DATA_OFFSETS_AVAILABLE);
+            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
+            broadcastQueue.add(intent);
+
+        }
+        while (broadcastQueue.size() != 0) {
+            intent = broadcastQueue.remove();
+            sendBroadcast(intent);
+        }
     }
 }

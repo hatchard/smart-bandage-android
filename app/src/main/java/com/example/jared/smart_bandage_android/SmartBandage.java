@@ -63,35 +63,56 @@ public class SmartBandage implements Serializable{
         return this.bandageConnectionStatus;
     }
 
-    public static float parseTemp(BluetoothGattCharacteristic characteristic){
+    public static double parseTemp(byte[] data){
+        int count = 0;
+        double sum = 0;
+        double readingValue;
+        for (int i = 0; i < data.length/2; ++i) {
+            count++;
+            sum += (((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.;
+        }
+        readingValue = sum/count;
+        return readingValue ;
+    }
+    public static double parseHumidity(byte[] data){
+        int count = 0;
+        double sum = 0;
+        double readingValue;
+        for (int i = 0; i < data.length/2; ++i) {
+            count++;
+            sum += (((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.;
+        }
+        readingValue = sum/count;
+        return readingValue;
+    }
+    public static int parseID(byte[] data){
 
         return 1;
     }
-    public static float parseHumidity(BluetoothGattCharacteristic characteristic){
+    public static int parseState(byte[] data){
 
         return 1;
     }
-    public static int parseID(BluetoothGattCharacteristic characteristic){
+    public static double parseBattery(byte[] data){
+        int count = 0;
+        double sum = 0;
+        double readingValue;
+        for (int i = 0; i < data.length/2; ++i) {
+            count++;
+            sum += (((0x0FF & data[2 * i + 1]) << 8 | (0x0FF & data[2 * i]))) / 16.;
+        }
+        readingValue = sum/count;
+        return readingValue;
+    }
+    public static int parseExtPower(byte[] data){
 
         return 1;
     }
-    public static int parseState(BluetoothGattCharacteristic characteristic){
+    public static float parseMoisture(byte[] data){
 
         return 1;
     }
-    public static float parseBattery(BluetoothGattCharacteristic characteristic){
-
-        return 1;
-    }
-    public static int parseExtPower(BluetoothGattCharacteristic characteristic){
-
-        return 1;
-    }
-    public static float parseMoisture(BluetoothGattCharacteristic characteristic){
-
-        return 1;
-    }
-    public static int parseSysTime(BluetoothGattCharacteristic characteristic){
+    public static int parseSysTime(byte[] data){
 
         return 1;
     }
