@@ -76,8 +76,8 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "Device still scanning");
                 } else {
                     Log.d(TAG, "Device No longer Scanning");
-                    final Intent intent = new Intent(myself, DisplayBandageReadingsActivity.class);
-                    intent.putExtra(DisplayBandageReadingsActivity.DEVICE_LIST, rememberedSmartBandages);
+                    final Intent intent = new Intent(myself, ConnectedDevicesActivity.class);
+                    intent.putExtra(ConnectedDevicesActivity.DEVICE_LIST, rememberedSmartBandages);
                     startActivity(intent);
                 }
             }

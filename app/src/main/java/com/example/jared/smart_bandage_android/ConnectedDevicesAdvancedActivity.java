@@ -1,6 +1,5 @@
 package com.example.jared.smart_bandage_android;
 
-
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -11,24 +10,26 @@ import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import java.util.HashMap;
 
+/**
+ * Created by Me on 2016-03-22.
+ */
 
-public class ConnectedDevicesActivity extends AppCompatActivity {
+public class ConnectedDevicesAdvancedActivity extends AppCompatActivity {
     private final static String TAG = ConnectedDevicesActivity.class.getSimpleName();
 
     public final static String ACTION_GATT_CONNECTED =
@@ -55,9 +56,6 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_connected_devices);
 
         deviceList = (HashMap<String,SmartBandage>) getIntent().getSerializableExtra(DEVICE_LIST);
-       /* if(deviceList == null) {
-            deviceList = new HashMap<String, SmartBandage>();
-        }*/
 
         deviceListview = (ListView)findViewById(R.id.listView);
         deviceConnectionStatus = new HashMap<String,SmartBandage>();
@@ -73,14 +71,13 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
             device.connectGatt(this,true,mGattCallback);
         }
     }
-    private OnItemClickListener listviewListener =  new OnItemClickListener() {
+    private AdapterView.OnItemClickListener listviewListener =  new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             SmartBandage sm = (SmartBandage)parent.getItemAtPosition(position);
             Log.d(TAG,"Item Selected:" + sm.getBandageName() + " " + sm.getBandageAddress());
-            Intent i = new Intent(myself,DisplayBandageReadingsActivity.class);
-            i.putExtra(DisplayBandageReadingsActivity.BANDAGE, sm);
-            i.putExtra(ConnectedDevicesActivity.DEVICE_LIST, deviceList);
+            Intent i = new Intent(myself,DeviceServiceViewActivity.class);
+            i.putExtra(DeviceServiceViewActivity.BANDAGE, sm);
             startActivity(i);
         }
     };
@@ -171,7 +168,7 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
     private void processResult(SmartBandage sm){
         //Log.d(TAG,"New BLE Device:  " + result.getDevice().getName() + " @ " + result.getRssi());
 
-        msgHandler.sendMessage(Message.obtain(null,0,sm));
+        msgHandler.sendMessage(Message.obtain(null, 0, sm));
     }
     private Handler msgHandler = new Handler() {
         @Override

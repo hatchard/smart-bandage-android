@@ -33,6 +33,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ConnectedDevicesActivity" />
+        <activity android:name=".ConnectedDevicesAdvancedActivity"/>
         <activity android:name=".DeviceServiceViewActivity" />
         <activity android:name=".LoginActivity" />
 

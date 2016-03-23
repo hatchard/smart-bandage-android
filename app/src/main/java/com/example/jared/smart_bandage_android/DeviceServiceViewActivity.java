@@ -86,10 +86,12 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
     private final BluetoothGattCallback myCallback = new BluetoothGattCallback() {
+        int tries = 0;
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             String intentAction;
             if (newState == BluetoothProfile.STATE_CONNECTED) {
+                tries = 0;
                 intentAction = ACTION_GATT_CONNECTED;
                 broadcastUpdate(intentAction);
                 Log.i(TAG, "Connected to GATT server.");
@@ -99,36 +101,27 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 gatt.setCharacteristicNotification(gatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE).getCharacteristic(SmartBandageGatt.UUID_READINGS), false);
+
                 intentAction = ACTION_GATT_DISCONNECTED;
                 Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
+
+                // Try again
+//                if (tries++ <= 3) {
+//                    connectGatt();
+//                }
             }
         }
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
+                mBluetoothGatt.requestMtu(256);
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
             }
         }
 
-        @Override
-        public void onCharacteristicRead(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic characteristic,
-                                         int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
-            }
-        }
-
-        @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt,
-                                            BluetoothGattCharacteristic characteristic) {
-            broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
-        }
-
-        //copied from mike
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -139,6 +132,62 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
                                 .getCharacteristic(SmartBandageGatt.UUID_READINGS), true);
             } else {
                 System.err.println("Application MTU size update failed. Current MTU: " + Integer.toString(mtu));
+            }
+        }
+
+        @Override
+        public void onCharacteristicRead(BluetoothGatt gatt,
+                                         BluetoothGattCharacteristic characteristic,
+                                         int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                System.out.println("BLE read success " + characteristic.getUuid().toString());
+                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+            } else {
+                System.err.println("BLE read failed");
+            }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt,
+                                          BluetoothGattCharacteristic characteristic, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                System.out.println("BLE write succeeded");
+                // Re-read
+//                if (mBluetoothGatt.readCharacteristic(mGattCharacteristics.get(2).get(8))) {
+//                    System.out.println("Secondary read started...");
+//                } else {
+//                    System.err.println("Secondary write failed...");
+//                }
+            } else {
+                System.err.println("BLE write failed");
+            }
+        }
+
+        @Override
+        public void onCharacteristicChanged(BluetoothGatt gatt,
+                                            BluetoothGattCharacteristic characteristic) {
+            System.out.println("BLE data updated " + characteristic.getUuid().toString());
+            broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+        }
+
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor,
+                                      int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                System.out.println("Bluetooth descriptor write success: " + descriptor.getUuid().toString());
+            } else {
+                System.err.println("Bluetooth descriptor write failed: " + descriptor.getUuid().toString());
+            }
+        }
+
+        @Override
+        public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor,
+                                     int status) {
+
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                System.out.println("Bluetooth descriptor read success: " + descriptor.getUuid().toString());
+            } else {
+                System.err.println("Bluetooth descriptor read failed: " + descriptor.getUuid().toString());
             }
         }
     };
@@ -290,7 +339,7 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
         sendBroadcast(intent);
     }
 
-    
+
     // Demonstrates how to iterate through the supported GATT Services/Characteristics.
     // In this sample, we populate the data structure that is bound to the ExpandableListView
     // on the UI.

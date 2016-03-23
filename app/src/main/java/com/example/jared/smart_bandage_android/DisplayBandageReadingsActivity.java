@@ -149,8 +149,8 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
     public void viewAdvancedView(){
         Log.w("why", "about to go to DeviceServiceViewActivity");
-        Intent intent = new Intent(this, ConnectedDevicesActivity.class);
-        intent.putExtra(ConnectedDevicesActivity.DEVICE_LIST, deviceList);
+        Intent intent = new Intent(this, ConnectedDevicesAdvancedActivity.class);
+        intent.putExtra(ConnectedDevicesAdvancedActivity.DEVICE_LIST, deviceList);
        // Intent intent = new Intent(this, DeviceServiceViewActivity.class);
         startActivity(intent);
     }
