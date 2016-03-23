@@ -22,6 +22,7 @@ import java.util.HashMap;
 
 
 public class DisplayBandageReadingsActivity extends AppCompatActivity {
+    private static final String TAG = DisplayBandageReadingsActivity.class.getSimpleName();
     //probably not the best way to do this
     Context context;
     SendData sendData;
@@ -125,6 +126,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             if (BANDAGE_TEMP_AVAILABLE.equals(action)) {
                 Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
                 setTempData(intent.getStringExtra(EXTRA_DATA));
+                Log.i(TAG, "Caught the data: " + intent.getStringExtra(EXTRA_DATA).toString());
             }
 
             if (BANDAGE_HUMIDITY_AVAILABLE.equals(action)) {
@@ -181,9 +183,9 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
     private static IntentFilter makeGattUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(ACTION_GATT_CONNECTED);
-        intentFilter.addAction(ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(ACTION_GATT_SERVICES_DISCOVERED);
+       // intentFilter.addAction(ACTION_GATT_CONNECTED);
+       // intentFilter.addAction(ACTION_GATT_DISCONNECTED);
+        //intentFilter.addAction(ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(ACTION_DATA_AVAILABLE);
         intentFilter.addAction(BANDAGE_HUMIDITY_AVAILABLE);
         intentFilter.addAction(BANDAGE_TEMP_AVAILABLE);

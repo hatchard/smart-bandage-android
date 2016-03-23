@@ -63,7 +63,7 @@ public class SmartBandage implements Serializable{
         return this.bandageConnectionStatus;
     }
 
-    public static double parseTemp(byte[] data){
+    public static String parseTemp(byte[] data){
         int count = 0;
         double sum = 0;
         double readingValue;
@@ -72,9 +72,9 @@ public class SmartBandage implements Serializable{
             sum += (((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.;
         }
         readingValue = sum/count;
-        return readingValue ;
+        return String.valueOf(readingValue);
     }
-    public static double parseHumidity(byte[] data){
+    public static String parseHumidity(byte[] data){
         int count = 0;
         double sum = 0;
         double readingValue;
@@ -83,7 +83,7 @@ public class SmartBandage implements Serializable{
             sum += (((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.;
         }
         readingValue = sum/count;
-        return readingValue;
+        return String.valueOf(readingValue);
     }
     public static int parseID(byte[] data){
 
@@ -108,9 +108,16 @@ public class SmartBandage implements Serializable{
 
         return 1;
     }
-    public static float parseMoisture(byte[] data){
-
-        return 1;
+    public static String parseMoisture(byte[] data){
+        int count = 0;
+        double sum = 0;
+        double readingValue;
+        for (int i = 0; i < data.length/2; ++i) {
+            count++;
+            sum += (((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.;
+        }
+        readingValue = sum/count;
+        return String.valueOf(readingValue);
     }
     public static int parseSysTime(byte[] data){
 
