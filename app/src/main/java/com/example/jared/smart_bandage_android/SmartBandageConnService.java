@@ -269,6 +269,7 @@ public class SmartBandageConnService extends Service {
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Temperature Value") {
             final byte[] data = characteristic.getValue();
             Log.i(TAG,"TEMP: " + characteristic.getValue().toString());
+            intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
             Log.i(TAG, "TEMP value to send: " + characteristic.getValue());
             intent.putExtra("EXTRA_DATA",SmartBandage.parseTemp(characteristic.getValue()));
@@ -277,6 +278,7 @@ public class SmartBandageConnService extends Service {
         }
 
         if  (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Humidity Value"){
+            intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
             intent.putExtra("EXTRA_DATA", SmartBandage.parseHumidity(characteristic.getValue()));
             sendBroadcast(intent);
@@ -311,7 +313,8 @@ public class SmartBandageConnService extends Service {
 
         }
 
-        if (SampleGattAttributes.SMART_BANDAGE_MOISTURE_MAP.equals(characteristic.getUuid())){
+        if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Moisture Map"){
+            intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.MOISTURE_DATA_AVAILABLE);
             intent.putExtra("EXTRA_DATA", SmartBandage.parseMoisture(characteristic.getValue()));
             sendBroadcast(intent);

@@ -1,24 +1,25 @@
 package com.example.jared.smart_bandage_android;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.Toast;
 
-import org.json.JSONException;
-import org.json.JSONObject;
+        import android.content.BroadcastReceiver;
+        import android.content.Context;
+        import android.content.Intent;
+        import android.content.IntentFilter;
+        import android.os.Bundle;
+        import android.support.v7.app.AppCompatActivity;
+        import android.util.Log;
+        import android.view.Menu;
+        import android.view.MenuInflater;
+        import android.view.MenuItem;
+        import android.widget.EditText;
+        import android.widget.ListView;
+        import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+        import org.json.JSONException;
+        import org.json.JSONObject;
+
+        import java.util.ArrayList;
+        import java.util.HashMap;
 
 
 public class DisplayBandageReadingsActivity extends AppCompatActivity {
@@ -45,12 +46,6 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE =
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
-    public final static String EXTRA_DATA =
-            "com.example.bluetooth.le.EXTRA_DATA";
-    public final static String BANDAGE_TEMP_AVAILABLE =
-            "com.example.bluetooth.le.BANDAGE_TEMP_AVAILABLE";
-    public static final String BANDAGE_HUMIDITY_AVAILABLE = "com.example.smart_bandage_android.BANDAGE_HUMIDITY_AVAILABLE";
-    public static final String MOISTURE_DATA_AVAILABLE = "com.example.smart_bandage_android.MOISTURE_DATA_AVAILABLE";
 
     public DisplayBandageReadingsActivity(String humidityData, String moistureData, String bandageID) {
         this.humidityData = humidityData;
@@ -126,26 +121,22 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 //displayGattServices(mBluetoothGatt.getServices());
 
             } else if (ACTION_DATA_AVAILABLE.equals(action)) {
-               // Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
+                // Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
             }
 
-            if (BANDAGE_TEMP_AVAILABLE.equals(action)) {
-                Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
-                setTempData(intent.getStringExtra(EXTRA_DATA));
-                Log.i(TAG, "Caught the data: " + intent.getStringExtra(EXTRA_DATA).toString());
+            if (CustomActions.BANDAGE_TEMP_AVAILABLE.equals(action)) {
+                setTempData(intent.getStringExtra("EXTRA_DATA"));
             }
 
-            if (BANDAGE_HUMIDITY_AVAILABLE.equals(action)) {
-                Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
-                setHumidityData(intent.getStringExtra(EXTRA_DATA));
+            if (CustomActions.BANDAGE_HUMIDITY_AVAILABLE.equals(action)) {
+                setHumidityData(intent.getStringExtra("EXTRA_DATA"));
             }
 
-            if (MOISTURE_DATA_AVAILABLE.equals(action)) {
-                Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
-                setMoistureData(intent.getStringExtra(EXTRA_DATA));
+            if (CustomActions.MOISTURE_DATA_AVAILABLE.equals(action)) {
+                setMoistureData(intent.getStringExtra("EXTRA_DATA"));
             }
+
             updateActivity();
-
         }
     };
 
@@ -159,6 +150,9 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
         // 3. setListAdapter
         listView.setAdapter(adapter);// if extending Activity
+//        listView.invalidate();
+//        listView.invalidateViews();
+//        adapter.notifyDataSetChanged();
         // setListAdapter(adapter);
     }
 
@@ -183,19 +177,19 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         Log.w("why", "about to go to DeviceServiceViewActivity");
         Intent intent = new Intent(this, ConnectedDevicesAdvancedActivity.class);
         intent.putExtra(ConnectedDevicesAdvancedActivity.DEVICE_LIST, deviceList);
-       // Intent intent = new Intent(this, DeviceServiceViewActivity.class);
+        // Intent intent = new Intent(this, DeviceServiceViewActivity.class);
         startActivity(intent);
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
-       // intentFilter.addAction(ACTION_GATT_CONNECTED);
-       // intentFilter.addAction(ACTION_GATT_DISCONNECTED);
+        // intentFilter.addAction(ACTION_GATT_CONNECTED);
+        // intentFilter.addAction(ACTION_GATT_DISCONNECTED);
         //intentFilter.addAction(ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(ACTION_DATA_AVAILABLE);
-        intentFilter.addAction(BANDAGE_HUMIDITY_AVAILABLE);
-        intentFilter.addAction(BANDAGE_TEMP_AVAILABLE);
-        intentFilter.addAction(MOISTURE_DATA_AVAILABLE);
+        intentFilter.addAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
+        intentFilter.addAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
+        intentFilter.addAction(CustomActions.MOISTURE_DATA_AVAILABLE);
 
         return intentFilter;
     }
@@ -225,4 +219,3 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         this.moistureData = moistureData;
     }
 }
-
