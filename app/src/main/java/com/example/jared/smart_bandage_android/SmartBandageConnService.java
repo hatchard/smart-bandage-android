@@ -263,8 +263,8 @@ public class SmartBandageConnService extends Service {
     }
 
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
-         Intent intent = new Intent();
-        String values;
+         final Intent intent = new Intent(action);
+
         Log.i(TAG,"SAMPLE GATT ATTRIBUTE UUID: " + (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null)));
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Temperature Value") {
             final byte[] data = characteristic.getValue();
