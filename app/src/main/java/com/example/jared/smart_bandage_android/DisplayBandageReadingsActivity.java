@@ -42,6 +42,11 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String BANDAGE_TEMP_AVAILABLE =
+            "com.example.bluetooth.le.BANDAGE_TEMP_AVAILABLE";
+    public static final String BANDAGE_HUMIDITY_AVAILABLE = "com.example.smart_bandage_android.BANDAGE_HUMIDITY_AVAILABLE";
+    public static final String MOISTURE_DATA_AVAILABLE = "com.example.smart_bandage_android.MOISTURE_DATA_AVAILABLE";
+
 
 
     @Override
@@ -111,7 +116,9 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 //displayGattServices(mBluetoothGatt.getServices());
 
             } else if (ACTION_DATA_AVAILABLE.equals(action)) {
-                Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
+               // Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
+            } if (BANDAGE_TEMP_AVAILABLE.equals(action)) {
+                Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(BANDAGE_TEMP_AVAILABLE), Toast.LENGTH_SHORT).show();
             }
         }
     };
@@ -161,6 +168,10 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         intentFilter.addAction(ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(BANDAGE_HUMIDITY_AVAILABLE);
+        intentFilter.addAction(BANDAGE_TEMP_AVAILABLE);
+        intentFilter.addAction(MOISTURE_DATA_AVAILABLE);
+
         return intentFilter;
     }
 

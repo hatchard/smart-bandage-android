@@ -26,6 +26,7 @@ public class SmartBandageConnService extends Service {
     private static final String EXTRA_DATA = "EXTRA_DATA";
     HashMap<String,SmartBandage> rememberedBandages;
     BluetoothAdapter bluetoothAdapter;
+    BluetoothGatt mBluetoothGatt;
     public SmartBandageConnService() {
     }
 
@@ -58,11 +59,13 @@ public class SmartBandageConnService extends Service {
         startForeground(CustomActions.FOREGROUND_SERVICE_ID, notification);
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
+
         for (String key : rememberedBandages.keySet()){
             Log.i(TAG,"Device " + key );
-            BluetoothDevice device =  bluetoothAdapter.getRemoteDevice(key);
-            device.connectGatt(this, true, mGattCallback);
+
+            mBluetoothGatt = bluetoothAdapter.getRemoteDevice(key).connectGatt(this, true, mGattCallback);
         }
+        //mBluetoothGatt = bluetoothAdapter.getRemoteDevice(device.getBandageAddress()).connectGatt(this, true, myCallback);
     }
 
     @Override
@@ -103,7 +106,7 @@ public class SmartBandageConnService extends Service {
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.i(TAG, "Services Discovered YAAY");
-
+                gatt.requestMtu(256);
                 BluetoothGattService service = gatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
                 List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
                 for ( BluetoothGattCharacteristic chara : charas){
@@ -113,6 +116,10 @@ public class SmartBandageConnService extends Service {
                     for (BluetoothGattDescriptor descriptor : descriptors) {
                         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                         gatt.writeDescriptor(descriptor);
+                        if (!gatt.writeDescriptor(descriptor)) {
+                            System.err.println("Failed to set descriptor");
+                        }
+
                     }
                 }
 
@@ -122,23 +129,109 @@ public class SmartBandageConnService extends Service {
         }
 
         @Override
+        public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                System.out.println("Application MTU size updated from service: " + Integer.toString(mtu));
+                //SetEnableCharacteristicNotifications(
+                    //    gatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE)
+                      //          .getCharacteristic(SmartBandageGatt.UUID_READINGS), true);
+
+            } else {
+                System.err.println("Application MTU size update failed. Current MTU: " + Integer.toString(mtu));
+            }
+        }
+
+        @Override
         public void onCharacteristicRead(BluetoothGatt gatt,
                                          BluetoothGattCharacteristic characteristic,
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.i(TAG, "Read Characteristic");
+                System.out.println("BLE read success " + characteristic.getUuid().toString());
                 broadcastUpdate(characteristic);
+            } else {
+                System.err.println("BLE read failed");
+            }
+        }
+
+        @Override
+        public void onCharacteristicWrite(BluetoothGatt gatt,
+                                          BluetoothGattCharacteristic characteristic, int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                System.out.println("BLE write succeeded");
+                // Re-read
+//                if (mBluetoothGatt.readCharacteristic(mGattCharacteristics.get(2).get(8))) {
+//                    System.out.println("Secondary read started...");
+//                } else {
+//                    System.err.println("Secondary write failed...");
+//                }
+            } else {
+                System.err.println("BLE write failed");
             }
         }
 
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
-            Log.i(TAG,"Characteristic Changed");
-            //Here is where broadcasts will be sent containing information when characteristic is updated
+            System.out.println("BLE data updated " + characteristic.getUuid().toString());
             broadcastUpdate(characteristic);
         }
+
+        @Override
+        public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor,
+                                      int status) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                System.out.println("Bluetooth descriptor write success: " + descriptor.getUuid().toString());
+            } else {
+                System.err.println("Bluetooth descriptor write failed: " + descriptor.getUuid().toString());
+            }
+        }
+
+        @Override
+        public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor,
+                                     int status) {
+
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                System.out.println("Bluetooth descriptor read success: " + descriptor.getUuid().toString());
+            } else {
+                System.err.println("Bluetooth descriptor read failed: " + descriptor.getUuid().toString());
+            }
+        }
     };
+
+    /*
+    private static final UUID CONFIG_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    private boolean SetEnableCharacteristicNotifications(BluetoothGattCharacteristic characteristic, boolean enable) {
+        if (enable) {
+            System.out.println("Enabling notifications for characteristic " + characteristic.getUuid().toString());
+        } else {
+            System.out.println("Disabling notifications for characteristic " + characteristic.getUuid().toString());
+        }
+
+//        mNotifyCharacteristic = characteristic;
+        mBluetoothGatt.setCharacteristicNotification(characteristic, true);
+
+        final BluetoothGattDescriptor desc = characteristic.getDescriptor(CONFIG_DESCRIPTOR);
+        if (null == desc) {
+            System.err.println("Failed to get config descriptor");
+            return false;
+        }
+
+        if (!desc.setValue(enable ? BluetoothGattDescriptor.ENABLE_INDICATION_VALUE : BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE)) {
+            System.err.println("Failed to set notification value");
+            return false;
+        }
+
+        if (!mBluetoothGatt.writeDescriptor(desc)) {
+            System.err.println("Failed to set descriptor");
+            return false;
+        }
+
+        System.out.println("Characteristic descriptor written");
+
+        return true;
+    }
+*/
+
 
     private void broadcastUpdate(final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent();
