@@ -29,6 +29,7 @@ public class SmartBandageConnService extends Service {
     BluetoothAdapter bluetoothAdapter;
     Queue<Intent> broadcastQueue = new LinkedList<>();
     Queue<BluetoothGattDescriptor>  bleQueue = new LinkedList<>();
+    Queue<BluetoothGattCharacteristic> bleReadQueue = new LinkedList<>();
     BluetoothGatt mBluetoothGatt;
     public final static String ACTION_GATT_CONNECTED =
             "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
@@ -151,15 +152,16 @@ public class SmartBandageConnService extends Service {
 
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
-            BluetoothGattDescriptor bluetoothGattDescriptor;
+            BluetoothGattCharacteristic bluetoothGattCharacteristic;
             boolean flag = true;
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 System.out.println("Application MTU size updated from service: " + Integer.toString(mtu));
 
-                BluetoothGattService service = mBluetoothGatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
+               BluetoothGattService service = mBluetoothGatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
                 List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
                 for ( BluetoothGattCharacteristic chara : charas){
-                    Log.i(TAG, SampleGattAttributes.lookup(chara.getUuid().toString(), "UNKNOWN"));
+                    bleReadQueue.add(chara);
+                    /*Log.i(TAG, SampleGattAttributes.lookup(chara.getUuid().toString(), "UNKNOWN"));
                     mBluetoothGatt.setCharacteristicNotification(chara, true);
                     List<BluetoothGattDescriptor> descriptors = chara.getDescriptors();
                     for (BluetoothGattDescriptor descriptor : descriptors) {
@@ -167,13 +169,14 @@ public class SmartBandageConnService extends Service {
                         bleQueue.add(descriptor);
                         mBluetoothGatt.writeDescriptor(descriptor);
 
-                    }
+                    }*/
                 }
 
-                while (bleQueue.size() != 0 ) {
+                while (bleReadQueue.size() != 0 ) {
                     if(flag == true) {
-                        bluetoothGattDescriptor = bleQueue.remove();
-                        flag = writingDescriptor(bluetoothGattDescriptor);
+                        flag = false;
+                        bluetoothGattCharacteristic = bleReadQueue.remove();
+                        flag = readingCharacteristic(bluetoothGattCharacteristic);
                     }
                 }
                // SetEnableCharacteristicNotifications(
@@ -243,13 +246,9 @@ public class SmartBandageConnService extends Service {
     };
 
 
-    private boolean writingDescriptor(BluetoothGattDescriptor descriptor) {
-        if (!mBluetoothGatt.writeDescriptor(descriptor)) {
-            System.err.println("Failed to set descriptor");
-            return false;
-        }
-
-        System.out.println("Characteristic descriptor written");
+    private boolean readingCharacteristic(BluetoothGattCharacteristic characteristic) {
+        mBluetoothGatt.readCharacteristic(characteristic);
+        System.out.println("Characteristic read");
 
         return true;
     }
@@ -352,6 +351,7 @@ public class SmartBandageConnService extends Service {
 
         }
 
+        /*
         if (SampleGattAttributes.SMART_BANDAGE_READINGS.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.SMART_BANDAGE_READINGS_AVAILABLE);
             intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
@@ -385,7 +385,7 @@ public class SmartBandageConnService extends Service {
             intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
             broadcastQueue.add(intent);
 
-        }
+        }*/
         while (broadcastQueue.size() != 0) {
             intent = broadcastQueue.remove();
             sendBroadcast(intent);
