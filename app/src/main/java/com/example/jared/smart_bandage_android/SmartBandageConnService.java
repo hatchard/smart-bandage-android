@@ -23,10 +23,23 @@ import java.util.UUID;
 
 public class SmartBandageConnService extends Service {
     private static final String TAG = SmartBandageConnService.class.getSimpleName();
-    private static final String EXTRA_DATA = "EXTRA_DATA";
     HashMap<String,SmartBandage> rememberedBandages;
     BluetoothAdapter bluetoothAdapter;
     BluetoothGatt mBluetoothGatt;
+    public final static String ACTION_GATT_CONNECTED =
+            "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
+    public final static String ACTION_GATT_DISCONNECTED =
+            "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED";
+    public final static String ACTION_GATT_SERVICES_DISCOVERED =
+            "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
+    public final static String ACTION_DATA_AVAILABLE =
+            "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
+    public final static String EXTRA_DATA =
+            "com.example.bluetooth.le.EXTRA_DATA";
+    public final static String BANDAGE_TEMP_AVAILABLE =
+            "com.example.bluetooth.le.BANDAGE_TEMP_AVAILABLE";
+    public static final String BANDAGE_HUMIDITY_AVAILABLE = "com.example.smart_bandage_android.BANDAGE_HUMIDITY_AVAILABLE";
+    public static final String MOISTURE_DATA_AVAILABLE = "com.example.smart_bandage_android.MOISTURE_DATA_AVAILABLE";
     public SmartBandageConnService() {
     }
 
@@ -96,8 +109,10 @@ public class SmartBandageConnService extends Service {
                 // Attempts to discover services after successful connection.
                 Log.i(TAG, "Attempting to start service discovery:" +
                         gatt.discoverServices());
+                        broadcastUpdate(ACTION_GATT_CONNECTED);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.i(TAG, "Disconnected from GATT server in service.");
+                broadcastUpdate(ACTION_GATT_DISCONNECTED);
 
             }
         }
@@ -107,6 +122,7 @@ public class SmartBandageConnService extends Service {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 Log.i(TAG, "Services Discovered YAAY");
                 gatt.requestMtu(256);
+                broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED);
                 BluetoothGattService service = gatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
                 List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
                 for ( BluetoothGattCharacteristic chara : charas){
@@ -116,9 +132,9 @@ public class SmartBandageConnService extends Service {
                     for (BluetoothGattDescriptor descriptor : descriptors) {
                         descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                         gatt.writeDescriptor(descriptor);
-                        if (!gatt.writeDescriptor(descriptor)) {
-                            System.err.println("Failed to set descriptor");
-                        }
+                      //  if (!gatt.writeDescriptor(descriptor)) {
+                      //      System.err.println("Failed to set descriptor");
+                      //  }
 
                     }
                 }
@@ -132,9 +148,9 @@ public class SmartBandageConnService extends Service {
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 System.out.println("Application MTU size updated from service: " + Integer.toString(mtu));
-                //SetEnableCharacteristicNotifications(
-                    //    gatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE)
-                      //          .getCharacteristic(SmartBandageGatt.UUID_READINGS), true);
+               // SetEnableCharacteristicNotifications(
+               //        gatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE)
+               //                 .getCharacteristic(SmartBandageGatt.UUID_READINGS), true);
 
             } else {
                 System.err.println("Application MTU size update failed. Current MTU: " + Integer.toString(mtu));
@@ -147,7 +163,7 @@ public class SmartBandageConnService extends Service {
                                          int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 System.out.println("BLE read success " + characteristic.getUuid().toString());
-                broadcastUpdate(characteristic);
+                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
             } else {
                 System.err.println("BLE read failed");
             }
@@ -173,7 +189,7 @@ public class SmartBandageConnService extends Service {
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
             System.out.println("BLE data updated " + characteristic.getUuid().toString());
-            broadcastUpdate(characteristic);
+            broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
         }
 
         @Override
@@ -198,9 +214,9 @@ public class SmartBandageConnService extends Service {
         }
     };
 
-    /*
-    private static final UUID CONFIG_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
-    private boolean SetEnableCharacteristicNotifications(BluetoothGattCharacteristic characteristic, boolean enable) {
+   /*
+   // private static final UUID CONFIG_DESCRIPTOR = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+    private boolean SetEnableCharacteristicNotifications(BluetoothGattCharacteristic characteristic, boolean enable, ) {
         if (enable) {
             System.out.println("Enabling notifications for characteristic " + characteristic.getUuid().toString());
         } else {
@@ -229,11 +245,14 @@ public class SmartBandageConnService extends Service {
         System.out.println("Characteristic descriptor written");
 
         return true;
+    }*/
+
+    private void broadcastUpdate(final String action) {
+        final Intent intent = new Intent(action);
+        sendBroadcast(intent);
     }
-*/
 
-
-    private void broadcastUpdate(final BluetoothGattCharacteristic characteristic) {
+    private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent();
 
         if (SampleGattAttributes.SMART_BANDAGE_TEMP.equals(characteristic.getUuid())) {
