@@ -297,7 +297,6 @@ public class SmartBandageConnService extends Service {
 
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
-        Bundle bundle = new Bundle();
         Log.i(TAG,"SAMPLE GATT ATTRIBUTE UUID: " + (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null)));
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Temperature Value") {
             final byte[] data = characteristic.getValue();
@@ -305,16 +304,16 @@ public class SmartBandageConnService extends Service {
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
             Log.i(TAG, "TEMP value to send: " + characteristic.getValue());
-           // bundle.putFloatArray("DATA_VALUE", SmartBandage.parseTemp(characteristic.getValue()));
-            intent.putExtra("DATA_ARRAY",ArrayPasser.pack(SmartBandage.parseTemp(characteristic.getValue())));
-            //broadcastQueue.add(intent);
+            intent.putExtra("DATA_ARRAY", ArrayPasser.pack(SmartBandage.parseTemp(characteristic.getValue())));
             sendBroadcast(intent);
         }
 
         if  (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Humidity Value"){
+            final byte[] data = characteristic.getValue();
+            Log.i(TAG, "HUMIDITY: " + characteristic.getValue().toString());
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseHumidity(characteristic.getValue()));
+            intent.putExtra("DATA_ARRAY",ArrayPasser.pack(SmartBandage.parseHumidity(characteristic.getValue())));
             sendBroadcast(intent);
 
         }

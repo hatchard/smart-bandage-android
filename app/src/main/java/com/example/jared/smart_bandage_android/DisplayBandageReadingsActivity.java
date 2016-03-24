@@ -99,7 +99,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         String recordType;
-        String bandageID;
+        String bandageID = "1";
         String sensorID;
         String creationTime;
         String value;
@@ -121,7 +121,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             if (CustomActions.BANDAGE_TEMP_AVAILABLE.equals(action)) {
                 recordType = "temp";
                 //need to actually get this later
-                bandageID = "1";
+                //bandageID = "1";
                 String avg;
                 //Bundle bundle = getIntent().getExtras();
                 float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
@@ -138,10 +138,23 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             }
 
             if (CustomActions.BANDAGE_HUMIDITY_AVAILABLE.equals(action)) {
-                setHumidityData(intent.getStringExtra("EXTRA_DATA"));
+                String avg;
+                recordType = "humidity";
+                float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
+                avg = findAverage(dataArray);
+                setHumidityData(avg);
+
+                for (int i = 0; i < dataArray.length; ++i) {
+                    sendData = new SendData();
+                    sensorID = String.valueOf(i+1);
+                    creationTime = "0";
+                    value = String.valueOf(dataArray[i]);
+                    sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
+                }
             }
 
             if (CustomActions.MOISTURE_DATA_AVAILABLE.equals(action)) {
+                recordType = "moisture";
                 setMoistureData(intent.getStringExtra("EXTRA_DATA"));
             }
 
