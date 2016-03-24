@@ -28,40 +28,43 @@ import org.apache.http.message.BasicNameValuePair;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class SendData {
     private EditText bandageID;
-    private String tempValue = "3";
+    private String tempValue;
     private String humidityValue;
     // TODO add in moisture later if that ends up working...
 
 
     public void insert(){
-        String bandageIDstring = "1234";
-        insertToDatabase(bandageIDstring,tempValue);
+        String record_type = "temp";
+        String bandage_id = "1234";
+        String  sensor_id = "1";
+        String creation_time = "2000";
+        String value = "38";
+        insertToDatabase(record_type, bandage_id,sensor_id,creation_time,value);
+
     }
 
-    private void insertToDatabase(final String bID, final String temp){
+    private void insertToDatabase(final String record_type, final String bID, final String sID, final String time, final String value){
         class SendPostReqAsyncTask extends AsyncTask<String, Void, String> {
             @Override
             protected String doInBackground(String... params) {
-                String paramUsername = params[0];
-                String paramAddress = params[1];
-
-
 
                 List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
-                nameValuePairs.add(new BasicNameValuePair("bandage_id", "123"));
-                nameValuePairs.add(new BasicNameValuePair("temp_data", "asdsadasd"));
-
-                //nameValuePairs.add(new BasicNameValuePair("humidity", humid));
+                nameValuePairs.add(new BasicNameValuePair("record_type", record_type));
+                nameValuePairs.add(new BasicNameValuePair("bandage_id", bID));
+                nameValuePairs.add(new BasicNameValuePair("sensor_id", sID));
+                nameValuePairs.add(new BasicNameValuePair("creation_time", time));
+                nameValuePairs.add(new BasicNameValuePair("value", value));
 
 
                 try {
                     HttpClient httpClient = new DefaultHttpClient();
                     HttpPost httpPost = new HttpPost(
-                            "http://www.jaredcuglietta.ca/insert_db.php");
+                            "http://www.jaredcuglietta.ca/uploader.php");
                     httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 
                     HttpResponse response = httpClient.execute(httpPost);
@@ -90,7 +93,7 @@ public class SendData {
             */
         }
         SendPostReqAsyncTask sendPostReqAsyncTask = new SendPostReqAsyncTask();
-        sendPostReqAsyncTask.execute(bID, temp);
+        sendPostReqAsyncTask.execute(record_type, bID, sID,time,value);
     }
 
 

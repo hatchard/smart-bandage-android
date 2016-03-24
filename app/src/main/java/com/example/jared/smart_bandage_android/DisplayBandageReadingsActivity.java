@@ -5,6 +5,8 @@ package com.example.jared.smart_bandage_android;
         import android.content.Context;
         import android.content.Intent;
         import android.content.IntentFilter;
+        import android.net.ConnectivityManager;
+        import android.net.NetworkInfo;
         import android.os.Bundle;
         import android.support.v7.app.AppCompatActivity;
         import android.util.Log;
@@ -134,12 +136,29 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
             if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
                 String values = intent.getStringExtra("EXTRA_DATA");
-                Log.i (TAG, "readings" + values);
+                Log.i(TAG, "readings" + values);
+
             }
 
             updateActivity();
         }
     };
+
+    // http://stackoverflow.com/questions/15698790/broadcast-receiver-for-checking-internet-connection-in-android-app
+    // from stack overflow, user1381827
+    public boolean isOnline(Context context) {
+        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+        //should check null because in air plan mode it will be null
+        return (netInfo != null && netInfo.isConnected());
+
+    }
+
+    // update the website with the historical data from here
+    public void updateWebsite(String historicalData) {
+        sendData = new SendData();
+        sendData.insert();
+    }
 
 
     public void updateActivity(){

@@ -119,17 +119,9 @@ public class SmartBandageConnService extends Service {
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.i(TAG, "Disconnected from GATT server in service.");
                 // Disable notificiations upon disconnect
-                BluetoothGattService service = gatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
-                List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
-                for ( BluetoothGattCharacteristic chara : charas){
-                    Log.i(TAG, SampleGattAttributes.lookup(chara.getUuid().toString(), "UNKNOWN"));
-                    gatt.setCharacteristicNotification(chara, true);
-                    List<BluetoothGattDescriptor> descriptors = chara.getDescriptors();
-                    for (BluetoothGattDescriptor descriptor : descriptors) {
-                        descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-                        gatt.writeDescriptor(descriptor);
-                    }
-                }
+                SetEnableCharacteristicNotifications(
+                        gatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE)
+                                .getCharacteristic(SmartBandageGatt.UUID_READINGS), false);
                 broadcastUpdate(ACTION_GATT_DISCONNECTED);
 
             }
@@ -177,20 +169,12 @@ public class SmartBandageConnService extends Service {
                     System.out.println("More to read");
                     readingCharacteristic(bleReadQueue);
                 }
-                if (readingsAvailable) {
+                else if (readingsAvailable) {
                     readingsAvailable = false;
                     //after you have read all of the current characteristics, can enable notifications
-                    BluetoothGattService service = gatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
-                    List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
-                    for (BluetoothGattCharacteristic chara : charas) {
-                        Log.i(TAG, SampleGattAttributes.lookup(chara.getUuid().toString(), "UNKNOWN"));
-                        gatt.setCharacteristicNotification(chara, true);
-                        List<BluetoothGattDescriptor> descriptors = chara.getDescriptors();
-                        for (BluetoothGattDescriptor descriptor : descriptors) {
-                            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                            gatt.writeDescriptor(descriptor);
-                        }
-                    }
+                    SetEnableCharacteristicNotifications(
+                            gatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE)
+                                    .getCharacteristic(SmartBandageGatt.UUID_READINGS), true);
                 }
 
             } else {
@@ -253,7 +237,7 @@ public class SmartBandageConnService extends Service {
         return true;
     }
 
-    /*
+    private static final UUID CONFIG_DESCRIPTOR = UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG);
     private boolean SetEnableCharacteristicNotifications(BluetoothGattCharacteristic characteristic, boolean enable ) {
 
         if (enable) {
@@ -284,7 +268,7 @@ public class SmartBandageConnService extends Service {
         System.out.println("Characteristic descriptor written");
 
         return true;
-    }*/
+    }
 
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
