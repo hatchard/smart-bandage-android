@@ -33,6 +33,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     public static HashMap<String,SmartBandage> deviceList;
 
     public final static String BANDAGE = "BANDAGE";
+   // public final static float[] dataValue = "DATA_VALUE";
 
     public final static String ACTION_GATT_CONNECTED =
             "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
@@ -113,7 +114,16 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             }
 
             if (CustomActions.BANDAGE_TEMP_AVAILABLE.equals(action)) {
-                setTempData(intent.getStringExtra("EXTRA_DATA"));
+                float sum = 0;
+                int count = 0;
+                //Bundle bundle = getIntent().getExtras();
+                float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
+
+                for (int i = 0; i < dataArray.length / 2; ++i) {
+                    count++;
+                    sum += dataArray[i];
+                }
+                setTempData( String.valueOf(sum / count));
             }
 
             if (CustomActions.BANDAGE_HUMIDITY_AVAILABLE.equals(action)) {

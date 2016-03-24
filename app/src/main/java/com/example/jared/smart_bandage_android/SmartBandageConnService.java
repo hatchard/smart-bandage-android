@@ -13,6 +13,7 @@ import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -296,15 +297,16 @@ public class SmartBandageConnService extends Service {
 
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
-
+        Bundle bundle = new Bundle();
         Log.i(TAG,"SAMPLE GATT ATTRIBUTE UUID: " + (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null)));
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Temperature Value") {
             final byte[] data = characteristic.getValue();
-            Log.i(TAG,"TEMP: " + characteristic.getValue().toString());
+            Log.i(TAG, "TEMP: " + characteristic.getValue().toString());
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
             Log.i(TAG, "TEMP value to send: " + characteristic.getValue());
-            intent.putExtra("EXTRA_DATA",SmartBandage.parseTemp(characteristic.getValue()));
+           // bundle.putFloatArray("DATA_VALUE", SmartBandage.parseTemp(characteristic.getValue()));
+            intent.putExtra("DATA_ARRAY",ArrayPasser.pack(SmartBandage.parseTemp(characteristic.getValue())));
             //broadcastQueue.add(intent);
             sendBroadcast(intent);
         }
