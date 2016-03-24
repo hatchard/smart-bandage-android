@@ -32,23 +32,8 @@ import java.util.Date;
 import java.util.List;
 
 public class SendData {
-    private EditText bandageID;
-    private String tempValue;
-    private String humidityValue;
-    // TODO add in moisture later if that ends up working...
 
-
-    public void insert(){
-        String record_type = "temp";
-        String bandage_id = "1234";
-        String  sensor_id = "1";
-        String creation_time = "2000";
-        String value = "200";
-        insertToDatabase(record_type, bandage_id,sensor_id,creation_time,value);
-
-    }
-
-    private void insertToDatabase(final String record_type, final String bID, final String sID, final String time, final String value){
+    public void insertToDatabase(final String record_type, final String bID, final String sID, final String time, final String value){
         class SendPostReqAsyncTask extends AsyncTask<String, Void, String> {
             @Override
             protected String doInBackground(String... params) {

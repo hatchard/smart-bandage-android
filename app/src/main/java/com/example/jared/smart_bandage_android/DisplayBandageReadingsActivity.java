@@ -55,8 +55,8 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
         updateActivity();
 
-        sendData = new SendData();
-        sendData.insert();
+       // sendData = new SendData();
+       // sendData.insert();
 
     }
 
@@ -98,6 +98,11 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     }
 
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+        String recordType;
+        String bandageID;
+        String sensorID;
+        String creationTime;
+        String value;
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
@@ -114,11 +119,22 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             }
 
             if (CustomActions.BANDAGE_TEMP_AVAILABLE.equals(action)) {
+                recordType = "temp";
+                //need to actually get this later
+                bandageID = "1";
                 String avg;
                 //Bundle bundle = getIntent().getExtras();
                 float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
                 avg = findAverage(dataArray);
                 setTempData(avg);
+
+                for (int i = 0; i < dataArray.length; ++i) {
+                    sendData = new SendData();
+                    sensorID = String.valueOf(i+1);
+                    creationTime = "0";
+                    value = String.valueOf(dataArray[i]);
+                    sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
+                }
             }
 
             if (CustomActions.BANDAGE_HUMIDITY_AVAILABLE.equals(action)) {
@@ -153,7 +169,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         float sum = 0;
         int count = 0;
 
-        for (int i = 0; i < dataArray.length / 2; ++i) {
+        for (int i = 0; i < dataArray.length; ++i) {
             count++;
             sum += dataArray[i];
         }
@@ -168,12 +184,6 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         //should check null because in air plan mode it will be null
         return (netInfo != null && netInfo.isConnected());
 
-    }
-
-    // update the website with the historical data from here
-    public void updateWebsite(String historicalData) {
-        sendData = new SendData();
-        sendData.insert();
     }
 
 
