@@ -231,7 +231,7 @@ public class SmartBandageConnService extends Service {
     private boolean readingCharacteristic(Queue<BluetoothGattCharacteristic> characteristicQueue) {
         BluetoothGattCharacteristic characteristic;
         characteristic = characteristicQueue.remove();
-        mBluetoothGatt.readCharacteristic(characteristic);
+       // mBluetoothGatt.readCharacteristic(characteristic);
 
         if (!mBluetoothGatt.readCharacteristic(characteristic)) {
             System.err.println("Failed to read characteristic");
