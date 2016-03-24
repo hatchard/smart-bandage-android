@@ -43,7 +43,7 @@ public class SendData {
         String bandage_id = "1234";
         String  sensor_id = "1";
         String creation_time = "2000";
-        String value = "38";
+        String value = "200";
         insertToDatabase(record_type, bandage_id,sensor_id,creation_time,value);
 
     }
