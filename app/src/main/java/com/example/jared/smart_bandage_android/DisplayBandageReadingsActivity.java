@@ -122,6 +122,21 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 setMoistureData(intent.getStringExtra("EXTRA_DATA"));
             }
 
+            if(CustomActions.SMART_BANDAGE_READING_COUNT_AVAILABLE.equals(action)){
+                String values = intent.getStringExtra("EXTRA_DATA");
+                Log.i (TAG, "reading count" + values);
+            }
+
+            if (CustomActions.SMART_BANDAGE_READING_SIZE_AVAILABLE.equals(action)) {
+                String values = intent.getStringExtra("EXTRA_DATA");
+                Log.i (TAG, "reading size" + values);
+            }
+
+            if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
+                String values = intent.getStringExtra("EXTRA_DATA");
+                Log.i (TAG, "readings" + values);
+            }
+
             updateActivity();
         }
     };
@@ -176,6 +191,9 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         intentFilter.addAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
         intentFilter.addAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
         intentFilter.addAction(CustomActions.MOISTURE_DATA_AVAILABLE);
+        intentFilter.addAction(CustomActions.SMART_BANDAGE_READINGS_AVAILABLE);
+        intentFilter.addAction(CustomActions.SMART_BANDAGE_READING_SIZE_AVAILABLE);
+        intentFilter.addAction(CustomActions.SMART_BANDAGE_READING_COUNT_AVAILABLE);
 
         return intentFilter;
     }
