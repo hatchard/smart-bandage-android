@@ -113,17 +113,20 @@ public class SmartBandage implements Serializable{
 
         return 1;
     }
-    public static String parseMoisture(byte[] data){
-        int count = 0;
-        double sum = 0;
-        double readingValue;
+    public static float[] parseMoisture(byte[] data){
+        double temp;
+        float[] tempArray = new float[data.length/2];
         for (int i = 0; i < data.length/2; ++i) {
-            count++;
-            sum += (((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.;
+
+            temp = (((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.;
+            tempArray[i] = (float) temp;
         }
-        readingValue = sum/count;
-        return String.valueOf(readingValue);
+
+        return tempArray;
+
     }
+
+
     public static int parseSysTime(byte[] data){
 
         return 1;

@@ -146,7 +146,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
                 for (int i = 0; i < dataArray.length; ++i) {
                     sendData = new SendData();
-                    sensorID = String.valueOf(i+1);
+                    sensorID = String.valueOf(i+10);
                     creationTime = "0";
                     value = String.valueOf(dataArray[i]);
                     sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
@@ -154,8 +154,19 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             }
 
             if (CustomActions.MOISTURE_DATA_AVAILABLE.equals(action)) {
+                String avg;
                 recordType = "moisture";
-                setMoistureData(intent.getStringExtra("EXTRA_DATA"));
+                float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
+                avg = findAverage(dataArray);
+                setMoistureData(avg);
+
+                for (int i = 0; i < dataArray.length; ++i) {
+                    sendData = new SendData();
+                    sensorID = String.valueOf(i+20);
+                    creationTime = "0";
+                    value = String.valueOf(dataArray[i]);
+                    sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
+                }
             }
 
             if(CustomActions.SMART_BANDAGE_READING_COUNT_AVAILABLE.equals(action)){

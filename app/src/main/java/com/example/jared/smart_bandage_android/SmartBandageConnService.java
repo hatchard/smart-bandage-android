@@ -347,9 +347,11 @@ public class SmartBandageConnService extends Service {
         }
 
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Moisture Map"){
+            final byte[] data = characteristic.getValue();
+            Log.i(TAG, "HUMIDITY: " + characteristic.getValue().toString());
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.MOISTURE_DATA_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseMoisture(characteristic.getValue()));
+            intent.putExtra("DATA_ARRAY",ArrayPasser.pack(SmartBandage.parseMoisture(characteristic.getValue())));
             sendBroadcast(intent);
 
         }
