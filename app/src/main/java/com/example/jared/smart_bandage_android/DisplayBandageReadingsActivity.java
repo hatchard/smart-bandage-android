@@ -114,16 +114,11 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             }
 
             if (CustomActions.BANDAGE_TEMP_AVAILABLE.equals(action)) {
-                float sum = 0;
-                int count = 0;
+                String avg;
                 //Bundle bundle = getIntent().getExtras();
                 float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
-
-                for (int i = 0; i < dataArray.length / 2; ++i) {
-                    count++;
-                    sum += dataArray[i];
-                }
-                setTempData( String.valueOf(sum / count));
+                avg = findAverage(dataArray);
+                setTempData(avg);
             }
 
             if (CustomActions.BANDAGE_HUMIDITY_AVAILABLE.equals(action)) {
@@ -153,6 +148,17 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             updateActivity();
         }
     };
+
+    public String findAverage(float[] dataArray) {
+        float sum = 0;
+        int count = 0;
+
+        for (int i = 0; i < dataArray.length / 2; ++i) {
+            count++;
+            sum += dataArray[i];
+        }
+        return String.valueOf(sum/count);
+    }
 
     // http://stackoverflow.com/questions/15698790/broadcast-receiver-for-checking-internet-connection-in-android-app
     // from stack overflow, user1381827
