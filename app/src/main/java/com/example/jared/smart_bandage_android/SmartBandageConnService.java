@@ -29,7 +29,7 @@ import java.util.UUID;
 public class SmartBandageConnService extends Service {
     private static final String TAG = SmartBandageConnService.class.getSimpleName();
     HashMap<String,SmartBandage> rememberedBandages;
-    public boolean readingsAvailable = false; //is set to true when there are historical readings available
+  //  public boolean readingsAvailable = false; //is set to true when there are historical readings available
     BluetoothAdapter bluetoothAdapter;
     Queue<Intent> broadcastQueue = new LinkedList<>();
     Queue<BluetoothGattDescriptor>  bleQueue = new LinkedList<>();
@@ -170,13 +170,22 @@ public class SmartBandageConnService extends Service {
                 if(bleReadQueue.peek()!= null) {
                     System.out.println("More to read");
                     readingCharacteristic(bleReadQueue);
-                } else if (readingsAvailable) {
-                    readingsAvailable = false;
+                } if (bleReadQueue.peek() == null){ //if there is no more to read then enable notifications to read historical data
+                    //readingsAvailable = false;
                     //after you have read all of the current characteristics, can enable notifications
+                    System.out.println("Turning on notifications ");
                     SetEnableCharacteristicNotifications(
                             gatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE)
                                     .getCharacteristic(SmartBandageGatt.UUID_READINGS), true);
-                    broadcastUpdate(CustomActions.SMART_BANDAGE_READINGS_AVAILABLE, characteristic);
+                    //broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+                    //added in for reading historical data
+                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                        System.out.println("BLE read success " + characteristic.getUuid().toString());
+                        broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
+                    } else {
+                        System.err.println("BLE read failed");
+                    }
+
                 }
 
             } else {
@@ -250,11 +259,6 @@ public class SmartBandageConnService extends Service {
 
         return true;
 
-//        if ((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-//            return mBluetoothGatt.readCharacteristic(characteristic);
-//        } else {
-//
-//        }
     }
 
     private static final UUID CONFIG_DESCRIPTOR = UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG);
@@ -365,10 +369,11 @@ public class SmartBandageConnService extends Service {
 
 
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Readings"){
-            readingsAvailable = true;
+            //readingsAvailable = true;
             intent.setAction(CustomActions.SMART_BANDAGE_READINGS_AVAILABLE);
             intent.putExtra("EXTRA_DATA", SmartBandage.parseReadings(characteristic.getValue()));
-            broadcastQueue.add(intent);
+           // broadcastQueue.add(intent);
+            sendBroadcast(intent);
 
         }
 

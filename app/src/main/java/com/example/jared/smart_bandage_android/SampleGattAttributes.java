@@ -56,9 +56,9 @@ public class SampleGattAttributes {
 
 
         //TODO need to confirm correct Bandage Characteristic UUIDs for the below,
-        attributes.put("0000f0f9-0000-1000-8000-00805f9b34fb", "Bandage Readings");
-        attributes.put("0000f0fa-0000-1000-8000-00805f9b34fb", "Bandage Reading Size");
-        attributes.put("0000f0fb-0000-1000-8000-00805f9b34fb", "Bandage Reading Count");
+        attributes.put("0000f0f9-0000-1000-8000-00805f9b34fb", "Readings");
+        attributes.put("0000f0fa-0000-1000-8000-00805f9b34fb", "Reading Size");
+        attributes.put("0000f0fb-0000-1000-8000-00805f9b34fb", "Reading Count");
         attributes.put("0000f0fc-0000-1000-8000-00805f9b34fb", "Greft Time");
         attributes.put("0000f0fd-0000-1000-8000-00805f9b34fb", "Data Offsets");
 
