@@ -1,20 +1,17 @@
 package com.example.jared.smart_bandage_android;
 
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.le.ScanRecord;
 import android.os.ParcelUuid;
-import android.support.annotation.NonNull;
+
 import android.util.Log;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
+import android.content.Context;
+
 
 /**
  * Created by Jared on 2/20/2016.
@@ -27,6 +24,7 @@ public class SmartBandage implements Serializable{
     private String bandageName;
     private String bandageAddress;
     private boolean bandageConnectionStatus = false;
+    FileIO fileIO;
 
     public SmartBandage(ScanRecord record,String bandageAddress) {
         this.bandageAddress = bandageAddress;
@@ -155,10 +153,11 @@ public class SmartBandage implements Serializable{
     }
 
     public static String parseReadings(byte[] data) {
+        FileIO fileIO = new FileIO();
         final StringBuilder stringBuilder = new StringBuilder();
         for (int i = 0; i < (data.length)/22; ++i) {
-            stringBuilder.append("Reading ");
-            stringBuilder.append(i);
+            stringBuilder.append("Reading: ");
+           // stringBuilder.append(i);
             stringBuilder.append("  ");
 
             for (int j = 0; j < 9; ++j) {
@@ -166,9 +165,11 @@ public class SmartBandage implements Serializable{
                 stringBuilder.append("  ");
             }
 
-            stringBuilder.append("Time: ");
-            stringBuilder.append((((0x0FF & data[i*22 + 21]) << 8 | (0x0FF & data[i*22 + 20]))));
-            System.out.println(stringBuilder.toString());
+            //stringBuilder.append("Time: ");
+            stringBuilder.append((((0x0FF & data[i * 22 + 21]) << 8 | (0x0FF & data[i * 22 + 20]))));
+            stringBuilder.append("  ");
+            //System.out.println(stringBuilder.toString());
+
         }
         return stringBuilder.toString();
     }

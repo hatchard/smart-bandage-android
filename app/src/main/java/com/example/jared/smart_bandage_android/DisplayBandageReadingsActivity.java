@@ -9,6 +9,7 @@ package com.example.jared.smart_bandage_android;
         import android.net.NetworkInfo;
         import android.os.Bundle;
         import android.support.v7.app.AppCompatActivity;
+        import android.text.TextUtils;
         import android.util.Log;
         import android.view.Menu;
         import android.view.MenuInflater;
@@ -16,7 +17,9 @@ package com.example.jared.smart_bandage_android;
         import android.widget.EditText;
         import android.widget.ListView;
         import java.util.ArrayList;
+        import java.util.Arrays;
         import java.util.HashMap;
+        import java.util.List;
 
 
 public class DisplayBandageReadingsActivity extends AppCompatActivity {
@@ -27,6 +30,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     String tempData;
     String humidityData;
     String moistureData;
+    FileIO fileIO;
     //EditText bandageID = (EditText) findViewById(R.id.bandageID);
    // String bandageID = "1234";
     public static String DEVICE_LIST ="deviceList";
@@ -133,7 +137,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                     sensorID = String.valueOf(i+1);
                     creationTime = "0";
                     value = String.valueOf(dataArray[i]);
-                    sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
+                   // sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
                 }
             }
 
@@ -149,7 +153,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                     sensorID = String.valueOf(i+10);
                     creationTime = "0";
                     value = String.valueOf(dataArray[i]);
-                    sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
+                    //sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
                 }
             }
 
@@ -165,7 +169,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                     sensorID = String.valueOf(i+20);
                     creationTime = "0";
                     value = String.valueOf(dataArray[i]);
-                    sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
+                    //sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
                 }
             }
 
@@ -180,14 +184,75 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             }
 
             if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
+              // fileIO = new FileIO();
+                String[] parsedValues;
+               // String data = fileIO.readHistoricalFile("historicalData.txt");
                 String values = intent.getStringExtra("EXTRA_DATA");
                 Log.i(TAG, "readings" + values);
+                parsedValues = parseHistoricalData(values);
+
+                sendParsedData(parsedValues);
 
             }
 
             updateActivity();
         }
     };
+
+    public void sendParsedData(String[] dataArray) {
+        String recordType = "";
+        String bandageID = "11";
+        String sensorID;
+        String creationTime;
+        String value;
+        String[] tempArray;
+        for (int j = 0; j < dataArray.length; ++j) {
+            tempArray = TextUtils.split(dataArray[j], " ");
+            List<String> list = new ArrayList<String>();
+            for(String s : tempArray) {
+                if(s != null && s.length() > 0) {
+                    list.add(s);
+                }
+            }
+            tempArray = list.toArray(new String[list.size()]);
+            for (int i = 0; i < tempArray.length - 1; ++i) {
+                sendData = new SendData();
+                sensorID = String.valueOf(i + 1);
+                creationTime = "0";
+                value = String.valueOf(tempArray[i]);
+                if (i < 4) { //temp data
+                    recordType = "temp";
+                }
+                if (i == 4) { //humidity data
+                    recordType = "humidity";
+                }
+                if (i > 4 && i < (tempArray.length - 1)) { //temp data
+                    recordType = "moisture";
+                }
+                creationTime = tempArray[tempArray.length - 1];
+                sendData.insertToDatabase(recordType, bandageID, sensorID, creationTime, value);
+            }
+        }
+    }
+    public String[] parseHistoricalData(String valueString) {
+        String[] srtData;
+        if (TextUtils.isEmpty(valueString)) {
+            return new String[0]; // or null depending on your needs
+        } else {
+            srtData = TextUtils.split(valueString, "Reading:  ");
+
+            List<String> list = new ArrayList<String>();
+
+            for(String s : srtData) {
+                if(s != null && s.length() > 0) {
+                    list.add(s);
+                }
+            }
+
+            srtData = list.toArray(new String[list.size()]);
+        }
+    return srtData;
+    }
 
     public String findAverage(float[] dataArray) {
         float sum = 0;
