@@ -157,6 +157,14 @@ public class SmartBandageConnService extends Service {
 
             } else {
                 System.err.println("Application MTU size update failed. Current MTU: " + Integer.toString(mtu));
+                try {
+                    wait(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                gatt.requestMtu(256);
+                System.out.println("Trying again to update mtu");
             }
         }
 
