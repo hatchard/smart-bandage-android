@@ -150,9 +150,8 @@ public class SmartBandageConnService extends Service {
                 System.out.println("Application MTU size updated from service: " + Integer.toString(mtu));
 
                 BluetoothGattService service = mBluetoothGatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
-                List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
                 bleReadQueue.clear();
-                for ( BluetoothGattCharacteristic chara : charas ){
+                for ( BluetoothGattCharacteristic chara : service.getCharacteristics() ){
                     if (chara.getUuid().equals(SmartBandageGatt.UUID_READINGS)) {
                         continue;
                     }
@@ -178,7 +177,6 @@ public class SmartBandageConnService extends Service {
                     readingCharacteristic(bleReadQueue);
                 } else {
                     //if there is no more to read then enable notifications to read historical data
-                    //readingsAvailable = false;
                     //after you have read all of the current characteristics, can enable notifications
                     System.out.println("Turning on notifications ");
                     SetEnableCharacteristicNotifications(
@@ -259,7 +257,6 @@ public class SmartBandageConnService extends Service {
         }
 
         return true;
-
     }
 
     private static final UUID CONFIG_DESCRIPTOR = UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG);
@@ -351,7 +348,7 @@ public class SmartBandageConnService extends Service {
             Log.i(TAG, "HUMIDITY: " + characteristic.getValue().toString());
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.MOISTURE_DATA_AVAILABLE);
-            intent.putExtra("DATA_ARRAY",ArrayPasser.pack(SmartBandage.parseMoisture(characteristic.getValue())));
+            intent.putExtra("DATA_ARRAY", ArrayPasser.pack(SmartBandage.parseMoisture(characteristic.getValue())));
             sendBroadcast(intent);
         }
 

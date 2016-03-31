@@ -205,7 +205,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
     public void sendParsedData(HistoricalReading reading) {
         int sensorId = 0;
-        String bandageID = "14";
+        String bandageID = "11";
         String readingTime = Integer.toString(reading.ReadingTime.getSeconds()/1000);
 
         if (null == sendData) {

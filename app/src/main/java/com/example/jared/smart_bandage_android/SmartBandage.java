@@ -128,7 +128,7 @@ public class SmartBandage implements Serializable{
     }
 
 
-    public static int parseSysTime(byte[] data){
+    public static long parseSysTime(byte[] data){
         return ReadingList.parse32BitLittleEndian(data, 0);
     }
 
