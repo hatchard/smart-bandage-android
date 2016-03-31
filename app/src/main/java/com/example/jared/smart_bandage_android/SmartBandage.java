@@ -10,6 +10,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 import android.content.Context;
 
 
@@ -126,8 +129,7 @@ public class SmartBandage implements Serializable{
 
 
     public static int parseSysTime(byte[] data){
-
-        return 1;
+        return ReadingList.parse32BitLittleEndian(data, 0);
     }
 
     public static String parseReadingSize(byte[] data) {
@@ -152,25 +154,31 @@ public class SmartBandage implements Serializable{
         return stringBuilder.toString();
     }
 
-    public static String parseReadings(byte[] data) {
-        FileIO fileIO = new FileIO();
-        final StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < (data.length)/22; ++i) {
-            stringBuilder.append("Reading: ");
-           // stringBuilder.append(i);
-            stringBuilder.append("  ");
+    public static ArrayList<HistoricalReading> parseReadings(byte[] data) {
+        ArrayList<HistoricalReading> returnList = new ArrayList<>();
+        long referenceTime = ReadingList.parse32BitLittleEndian(data, 0);
 
-            for (int j = 0; j < 9; ++j) {
-                stringBuilder.append((((0x0FF & data[2*j+1 + i*22]) << 8 | (0x0FF & data[2*j + i*22])))/16.);
-                stringBuilder.append("  ");
-            }
-
-            //stringBuilder.append("Time: ");
-            stringBuilder.append((((0x0FF & data[i * 22 + 21]) << 8 | (0x0FF & data[i * 22 + 20]))));
-            stringBuilder.append("  ");
-            //System.out.println(stringBuilder.toString());
-
+        for (int i = 0; i < (data.length - HistoricalReading.HistoricalReadingDataOffsets.RefTimeSize)/22; ++i) {
+            returnList.add(HistoricalReading.FromRawData(referenceTime, data, i * 22 + HistoricalReading.HistoricalReadingDataOffsets.RefTimeSize));
         }
-        return stringBuilder.toString();
+
+        return returnList;
+    }
+
+    public static HistoricalReading.HistoricalReadingDataOffsets parseDataOffsets(final byte[] data) {
+        final int offsetSize = 2;
+
+        HistoricalReading.Offsets = new HistoricalReading.HistoricalReadingDataOffsets() {{
+            TemperatureOffset = data[0];
+            HumidityOffset = data[1];
+            MoistureOffset = data[2];
+            TimeDiffOffset = data[3];
+
+            TemperatureCount = (HumidityOffset - TemperatureOffset) / offsetSize;
+            HumidityCount = (MoistureOffset - HumidityOffset) / offsetSize;
+            MoistureCount = (TimeDiffOffset - MoistureOffset) / offsetSize;
+        }};
+
+        return HistoricalReading.Offsets;
     }
 }

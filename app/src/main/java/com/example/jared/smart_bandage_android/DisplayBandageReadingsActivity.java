@@ -184,74 +184,45 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             }
 
             if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
-              // fileIO = new FileIO();
-                String[] parsedValues;
-               // String data = fileIO.readHistoricalFile("historicalData.txt");
-                String values = intent.getStringExtra("EXTRA_DATA");
-                Log.i(TAG, "readings" + values);
-                parsedValues = parseHistoricalData(values);
+                ArrayList<HistoricalReading> readings = (ArrayList<HistoricalReading>) intent.getSerializableExtra("EXTRA_DATA");
 
-                sendParsedData(parsedValues);
+                if (null == readings) {
+                    return;
+                }
 
+                for (HistoricalReading reading: readings) {
+                    if (null == reading) {
+                        continue;
+                    }
+
+                    sendParsedData(reading);
+                }
             }
 
             updateActivity();
         }
     };
 
-    public void sendParsedData(String[] dataArray) {
-        String recordType = "";
-        String bandageID = "11";
-        String sensorID;
-        String creationTime;
-        String value;
-        String[] tempArray;
-        for (int j = 0; j < dataArray.length; ++j) {
-            tempArray = TextUtils.split(dataArray[j], " ");
-            List<String> list = new ArrayList<String>();
-            for(String s : tempArray) {
-                if(s != null && s.length() > 0) {
-                    list.add(s);
-                }
-            }
-            tempArray = list.toArray(new String[list.size()]);
-            for (int i = 0; i < tempArray.length - 1; ++i) {
-                sendData = new SendData();
-                sensorID = String.valueOf(i + 1);
-                creationTime = "0";
-                value = String.valueOf(tempArray[i]);
-                if (i < 4) { //temp data
-                    recordType = "temp";
-                }
-                if (i == 4) { //humidity data
-                    recordType = "humidity";
-                }
-                if (i > 4 && i < (tempArray.length - 1)) { //temp data
-                    recordType = "moisture";
-                }
-                creationTime = tempArray[tempArray.length - 1];
-                sendData.insertToDatabase(recordType, bandageID, sensorID, creationTime, value);
-            }
+    public void sendParsedData(HistoricalReading reading) {
+        int sensorId = 0;
+        String bandageID = "14";
+        String readingTime = Integer.toString(reading.ReadingTime.getSeconds()/1000);
+
+        if (null == sendData) {
+            sendData = new SendData();
         }
-    }
-    public String[] parseHistoricalData(String valueString) {
-        String[] srtData;
-        if (TextUtils.isEmpty(valueString)) {
-            return new String[0]; // or null depending on your needs
-        } else {
-            srtData = TextUtils.split(valueString, "Reading:  ");
 
-            List<String> list = new ArrayList<String>();
-
-            for(String s : srtData) {
-                if(s != null && s.length() > 0) {
-                    list.add(s);
-                }
-            }
-
-            srtData = list.toArray(new String[list.size()]);
+        for (Double item: reading.Temperatures) {
+            sendData.insertToDatabase("temp", bandageID, Integer.toString(sensorId++), readingTime, Double.toString(item));
         }
-    return srtData;
+
+        for (Double item: reading.Humidities) {
+            sendData.insertToDatabase("humidity", bandageID, Integer.toString(sensorId++), readingTime, Double.toString(item));
+        }
+
+        for (Double item: reading.Moistures) {
+            sendData.insertToDatabase("moisture", bandageID, Integer.toString(sensorId++), readingTime, Double.toString(item));
+        }
     }
 
     public String findAverage(float[] dataArray) {
@@ -274,7 +245,6 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         return (netInfo != null && netInfo.isConnected());
 
     }
-
 
     public void updateActivity(){
         // 1. pass context and data to the custom adapter
@@ -328,6 +298,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         intentFilter.addAction(CustomActions.SMART_BANDAGE_READINGS_AVAILABLE);
         intentFilter.addAction(CustomActions.SMART_BANDAGE_READING_SIZE_AVAILABLE);
         intentFilter.addAction(CustomActions.SMART_BANDAGE_READING_COUNT_AVAILABLE);
+        intentFilter.addAction(CustomActions.SMART_BANDAGE_DATA_OFFSETS_AVAILABLE);
 
         return intentFilter;
     }
