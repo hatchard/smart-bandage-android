@@ -21,6 +21,5 @@ public class SmartBandageGatt {
             UUID_READINGS               = fromString("0000f0f9-0000-1000-8000-00805f9b34fb"),
             UUID_READING_SIZE           = fromString("0000f0fa-0000-1000-8000-00805f9b34fb"),
             UUID_READING_COUNT          = fromString("0000f0fb-0000-1000-8000-00805f9b34fb"),
-            UUID_READING_REF_TIMESTAMP  = fromString("0000f0fc-0000-1000-8000-00805f9b34fb"),
-            UUID_READING_DATA_OFFSETS   = fromString("0000f0fd-0000-1000-8000-00805f9b34fb");
+            UUID_READING_DATA_OFFSETS   = fromString("0000f0fc-0000-1000-8000-00805f9b34fb");
 }

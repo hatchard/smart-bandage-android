@@ -291,21 +291,21 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
             final byte[] data = characteristic.getValue();
 
             int value = 0;
-            for (int i = 0; i < (data.length)/22; ++i) {
-                final StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("Reading ");
-                stringBuilder.append(i);
-                stringBuilder.append("  ");
-
-                for (int j = 0; j < 9; ++j) {
-                    stringBuilder.append((((0x0FF & data[2*j+1 + i*22]) << 8 | (0x0FF & data[2*j + i*22])))/16.);
-                    stringBuilder.append("  ");
-                }
-
-                stringBuilder.append("Time: ");
-                stringBuilder.append((((0x0FF & data[i*22 + 21]) << 8 | (0x0FF & data[i*22 + 20]))));
-                System.out.println(stringBuilder.toString());
-            }
+//            for (int i = 0; i < (data.length)/22; ++i) {
+//                final StringBuilder stringBuilder = new StringBuilder();
+//                stringBuilder.append("Reading ");
+//                stringBuilder.append(i);
+//                stringBuilder.append("  ");
+//
+//                for (int j = 0; j < 9; ++j) {
+//                    stringBuilder.append((((0x0FF & data[2*j+1 + i*22]) << 8 | (0x0FF & data[2*j + i*22])))/16.);
+//                    stringBuilder.append("  ");
+//                }
+//
+//                stringBuilder.append("Time: ");
+//                stringBuilder.append((((0x0FF & data[i*22 + 21]) << 8 | (0x0FF & data[i*22 + 20]))));
+//                System.out.println(stringBuilder.toString());
+//            }
 
             if (doSingleWrite && data != null && data.length > 0) {
                 doSingleWrite = false;

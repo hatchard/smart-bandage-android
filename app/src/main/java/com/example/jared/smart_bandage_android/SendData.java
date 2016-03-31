@@ -45,7 +45,6 @@ public class SendData {
                 nameValuePairs.add(new BasicNameValuePair("creation_time", time));
                 nameValuePairs.add(new BasicNameValuePair("value", value));
 
-
                 try {
                     HttpClient httpClient = new DefaultHttpClient();
                     HttpPost httpPost = new HttpPost(
