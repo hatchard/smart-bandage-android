@@ -108,7 +108,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         String recordType;
-        String bandageID = "1";
+        String bandageID = "88";
         String sensorID;
         String creationTime;
         String value;
@@ -231,8 +231,10 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
     public void sendParsedData(HistoricalReading reading) {
         int sensorId = 0;
-        String bandageID = "3";
-        String readingTime = Integer.toString(reading.ReadingTime.getSeconds()/1000);
+
+        String bandageID = "14";
+        String readingTime = Long.toString(reading.ReadingTime.getTime()/1000);
+        System.out.printf("Reading Time: %s\n", readingTime);
 
         if (null == sendData) {
             sendData = new SendData();
