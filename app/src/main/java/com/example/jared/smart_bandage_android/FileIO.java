@@ -16,6 +16,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -103,6 +104,22 @@ public class FileIO {
     public String gsonSmartBandageHashMapSerializer (HashMap<String,SmartBandage> bandageHashMap) {
         Gson gson = new Gson();
         return gson.toJson(bandageHashMap);
+    }
+
+    public String gsonHistoricalSerializer(ArrayList<HistoricalReading> historicalReadings) {
+        Gson gson = new Gson();
+        return gson.toJson(historicalReadings);
+    }
+
+    public ArrayList<HistoricalReading> gsonHistoricalDeserializer (String serializedHistoricalData) {
+        Gson gson = new Gson();
+        ArrayList<HistoricalReading> historicalData = new ArrayList<>();
+        Type listType = new TypeToken<ArrayList<HistoricalReading>>() {}.getType();
+        if (serializedHistoricalData != null) {
+            historicalData = new Gson().fromJson(serializedHistoricalData, listType);
+        }
+
+        return historicalData;
     }
 
     //checks file system for the saved file, if there is no file or data in the file,

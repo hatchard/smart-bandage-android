@@ -16,10 +16,15 @@ package com.example.jared.smart_bandage_android;
         import android.view.MenuItem;
         import android.widget.EditText;
         import android.widget.ListView;
+
+        import java.io.FileOutputStream;
+        import java.io.IOException;
         import java.util.ArrayList;
         import java.util.Arrays;
         import java.util.HashMap;
         import java.util.List;
+
+        import static android.content.Context.MODE_APPEND;
 
 
 public class DisplayBandageReadingsActivity extends AppCompatActivity {
@@ -30,7 +35,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     String tempData;
     String humidityData;
     String moistureData;
-    FileIO fileIO;
+    FileIO fileIO = new FileIO();
     //EditText bandageID = (EditText) findViewById(R.id.bandageID);
    // String bandageID = "1234";
     public static String DEVICE_LIST ="deviceList";
@@ -124,6 +129,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
             if (CustomActions.BANDAGE_TEMP_AVAILABLE.equals(action)) {
                 recordType = "temp";
+
                 //need to actually get this later
                 //bandageID = "1";
                 String avg;
@@ -185,17 +191,37 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
             if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
                 ArrayList<HistoricalReading> readings = (ArrayList<HistoricalReading>) intent.getSerializableExtra("EXTRA_DATA");
+                ArrayList<HistoricalReading> fileReadings = new ArrayList<>();
 
                 if (null == readings) {
                     return;
                 }
 
-                for (HistoricalReading reading: readings) {
-                    if (null == reading) {
-                        continue;
+                if(isOnline(context)) {
+                    String json = fileIO.readFile(getFilesDir() +
+                            FileIO.SAVE_HISTORICAL_DATA);
+                    fileReadings = fileIO.gsonHistoricalDeserializer(json);
+
+                    for (HistoricalReading reading: readings) {
+                        if (null == reading) {
+                            continue;
+                        }
+
+                        sendParsedData(reading);
                     }
 
-                    sendParsedData(reading);
+                    for (HistoricalReading savedReading : fileReadings) {
+                        if (null == savedReading) {
+                            continue;
+                        }
+
+                        sendParsedData(savedReading);
+                    }
+                } else {
+                    Log.d(TAG, "no internet connection, saving data");
+                    fileIO.writeFile(getFilesDir() + FileIO.SAVE_HISTORICAL_DATA,
+                            false,
+                            fileIO.gsonHistoricalSerializer(readings));
                 }
             }
 
@@ -205,7 +231,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
     public void sendParsedData(HistoricalReading reading) {
         int sensorId = 0;
-        String bandageID = "11";
+        String bandageID = "3";
         String readingTime = Integer.toString(reading.ReadingTime.getSeconds()/1000);
 
         if (null == sendData) {
