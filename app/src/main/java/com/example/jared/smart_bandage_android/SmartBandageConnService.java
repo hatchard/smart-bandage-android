@@ -369,8 +369,17 @@ public class SmartBandageConnService extends Service {
 
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Readings"){
             intent.setAction(CustomActions.SMART_BANDAGE_READINGS_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseReadings(characteristic.getValue()));
+            ArrayList<HistoricalReading> readings = SmartBandage.parseReadings(characteristic.getValue());
+            intent.putExtra("EXTRA_DATA", readings);
             sendBroadcast(intent);
+
+            if (null != readings) {
+                for (HistoricalReading reading : readings) {
+                    if (null != reading) {
+                        sendParsedData(reading);
+                    }
+                }
+            }
         }
 
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Reading Size"){
@@ -389,6 +398,29 @@ public class SmartBandageConnService extends Service {
             intent.setAction(CustomActions.SMART_BANDAGE_DATA_OFFSETS_AVAILABLE);
             intent.putExtra("EXTRA_DATA", SmartBandage.parseDataOffsets(characteristic.getValue()));
             broadcastQueue.add(intent);
+        }
+    }
+
+    private SendData sendData;
+    public void sendParsedData(HistoricalReading reading) {
+        int sensorId = 0;
+        String bandageID = "14";
+        String readingTime = Long.toString(reading.ReadingTime.getTime()/1000);
+        System.out.printf("Reading Time: %s\n", readingTime);
+        if (null == sendData) {
+            sendData = new SendData();
+        }
+
+        for (Double item: reading.Temperatures) {
+            sendData.insertToDatabase("temp", bandageID, Integer.toString(sensorId++), readingTime, Double.toString(item));
+        }
+
+        for (Double item: reading.Humidities) {
+            sendData.insertToDatabase("humidity", bandageID, Integer.toString(sensorId++), readingTime, Double.toString(item));
+        }
+
+        for (Double item: reading.Moistures) {
+            sendData.insertToDatabase("moisture", bandageID, Integer.toString(sensorId++), readingTime, Double.toString(item));
         }
     }
 }
