@@ -32,12 +32,10 @@ import java.util.Date;
 import java.util.List;
 
 public class SendData {
-
     public void insertToDatabase(final String record_type, final String bID, final String sID, final String time, final String value){
         class SendPostReqAsyncTask extends AsyncTask<String, Void, String> {
             @Override
             protected String doInBackground(String... params) {
-
                 List<NameValuePair> nameValuePairs = new ArrayList<NameValuePair>();
                 nameValuePairs.add(new BasicNameValuePair("record_type", record_type));
                 nameValuePairs.add(new BasicNameValuePair("bandage_id", bID));
@@ -52,12 +50,13 @@ public class SendData {
                     httpPost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 
                     HttpResponse response = httpClient.execute(httpPost);
-                    Log.i("help", response.getStatusLine().toString());
-                    HttpEntity entity = response.getEntity();
-                    Log.i("help", entity.toString());
-
+                    if (response.getStatusLine().getStatusCode() != 200) {
+                        Log.i("help", response.getStatusLine().toString());
+                        HttpEntity entity = response.getEntity();
+                        Log.i("help", entity.toString());
+                    }
                 } catch (ClientProtocolException e) {
-                    Log.i("help", "helpp me");
+                    Log.i("help", e.getMessage());
 
                 } catch (IOException e) {
                     Log.i("help1", e.getMessage());
@@ -65,20 +64,8 @@ public class SendData {
                 }
                 return "success";
             }
-/*
-            @Override
-            protected void onPostExecute(String result) {
-                super.onPostExecute(result);
-
-                Toast.makeText(getApplicationContext(), result, Toast.LENGTH_LONG).show();
-                TextView textViewResult = (TextView) findViewById(R.id.textViewResult);
-                textViewResult.setText("Inserted");
-            }
-            */
         }
         SendPostReqAsyncTask sendPostReqAsyncTask = new SendPostReqAsyncTask();
         sendPostReqAsyncTask.execute(record_type, bID, sID,time,value);
     }
-
-
 }

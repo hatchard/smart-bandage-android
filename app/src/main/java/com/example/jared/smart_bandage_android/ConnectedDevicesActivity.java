@@ -93,18 +93,16 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
             String intentAction;
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 SmartBandage sm = new SmartBandage(gatt,SmartBandage.CONNECTED);
-                Log.i(TAG, "Connected to GATT server.");
-                // Attempts to discover services after successful connection.
+//                Log.i(TAG, "Connected to GATT server.");
+//                // Attempts to discover services after successful connection.
                 processResult(sm);
-                Log.i(TAG, "Attempting to start service discovery:" +
-                        gatt.discoverServices());
+//                Log.i(TAG, "Attempting to start service discovery:" +
+//                        gatt.discoverServices());
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.i(TAG, "Disconnected from GATT server.");
                 SmartBandage sm = new SmartBandage(gatt,SmartBandage.DISCONNECTED);
                 processResult(sm);
-
-
             }
         }
 

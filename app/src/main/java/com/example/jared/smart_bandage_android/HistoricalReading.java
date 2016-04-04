@@ -34,8 +34,12 @@ public class HistoricalReading implements Serializable {
             return null;
         }
 
-        HistoricalReading reading = new HistoricalReading(referenceTime,
-                ReadingList.parse16BitLittleEndian(data, offset + Offsets.TimeDiffOffset));
+        int timeDiff = ReadingList.parse16BitLittleEndian(data, offset + Offsets.TimeDiffOffset);
+        if (0 == timeDiff) {
+            return null;
+        }
+
+        HistoricalReading reading = new HistoricalReading(referenceTime, timeDiff);
 
         for (int i = 0; i < Offsets.TemperatureCount; ++i) {
             int baseOffset = HistoricalReadingDataOffsets.TemperatureSize * i + Offsets.TemperatureOffset + offset;
