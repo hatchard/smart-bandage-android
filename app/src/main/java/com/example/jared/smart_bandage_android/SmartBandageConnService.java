@@ -391,4 +391,6 @@ public class SmartBandageConnService extends Service {
             broadcastQueue.add(intent);
         }
     }
+
+
 }

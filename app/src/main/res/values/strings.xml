@@ -20,4 +20,5 @@
         completions."
     </string>
     <string name="title_activity_display_bandage_readings">DisplayBandageReadingsActivity</string>
+    <string name="title_activity_blecommunication_timing">BLECommunicationTimingActivity</string>
 </resources>

@@ -14,7 +14,6 @@
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.READ_PROFILE" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
-    
 
     <!-- To send data to the server need to access the internet -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -34,21 +33,21 @@
             </intent-filter>
         </activity>
         <activity android:name=".ConnectedDevicesActivity" />
-        <activity android:name=".ConnectedDevicesAdvancedActivity"/>
+        <activity android:name=".ConnectedDevicesAdvancedActivity" />
         <activity android:name=".DeviceServiceViewActivity" />
         <activity android:name=".LoginActivity" />
-
         <activity android:name=".DisplayBandageReadingsActivity" />
-
 
         <service
             android:name=".SmartBandageConnService"
             android:enabled="true"
             android:exported="true" />
 
-
-
-
+        <activity
+            android:name=".BLECommunicationTimingActivity"
+            android:label="@string/title_activity_blecommunication_timing"
+            android:theme="@style/AppTheme.NoActionBar" >
+        </activity>
     </application>
 
 </manifest>
