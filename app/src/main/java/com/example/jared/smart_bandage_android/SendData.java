@@ -21,12 +21,19 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HttpProcessor;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -67,5 +74,42 @@ public class SendData {
         }
         SendPostReqAsyncTask sendPostReqAsyncTask = new SendPostReqAsyncTask();
         sendPostReqAsyncTask.execute(record_type, bID, sID,time,value);
+    }
+
+    private class SendBulkReadingsAsyncTask extends AsyncTask<Void, Void, HttpResponse> {
+        private List<HistoricalReading> Readings;
+        public SendBulkReadingsAsyncTask(List<HistoricalReading> readings) {
+            Readings = readings;
+        }
+
+        @Override
+        protected HttpResponse doInBackground(Void... params) {
+            JSONArray dataArray = new JSONArray(Readings);
+
+            DefaultHttpClient httpClient = new DefaultHttpClient();
+
+            HttpPost post = new HttpPost("http://www.jaredcuglietta.ca/bulkUpload.php");
+
+            try {
+                post.setEntity(new StringEntity(dataArray.toString()));
+            } catch (UnsupportedEncodingException e) {
+                Log.i("BulkUploadError", e.getMessage());
+                return null;
+            }
+
+            post.setHeader("Accept", "application/json");
+            post.setHeader("Content-Type", "application/json");
+
+            try {
+                return httpClient.execute(post);
+            } catch (IOException e) {
+                Log.i("BulkUploadError", e.getMessage());
+                return null;
+            }
+        }
+    }
+
+    public void bulkInsertToDatabase(List<HistoricalReading> readings) {
+        new SendBulkReadingsAsyncTask(readings).execute();
     }
 }

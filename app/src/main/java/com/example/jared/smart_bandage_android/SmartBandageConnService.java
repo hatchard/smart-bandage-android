@@ -19,6 +19,7 @@ import android.util.Log;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -32,7 +33,9 @@ public class SmartBandageConnService extends Service {
   //  public boolean readingsAvailable = false; //is set to true when there are historical readings available
     BluetoothAdapter bluetoothAdapter;
     Queue<Intent> broadcastQueue = new LinkedList<>();
-    Queue<BluetoothGattDescriptor>  bleQueue = new LinkedList<>();
+    Queue<HistoricalReading> sendQueue = new LinkedList<>();
+    private SendData sendData;
+    private Integer BandageId;
     public Queue<BluetoothGattCharacteristic> bleReadQueue = new LinkedList<>();
     BluetoothGatt mBluetoothGatt;
     public final static String ACTION_GATT_CONNECTED =
@@ -329,7 +332,7 @@ public class SmartBandageConnService extends Service {
 
         if (SampleGattAttributes.SMART_BANDAGE_ID.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.BANDAGE_ID_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseID(characteristic.getValue()));
+            intent.putExtra("EXTRA_DATA", BandageId = SmartBandage.parseID(characteristic.getValue()));
             sendBroadcast(intent);
         }
 
@@ -369,17 +372,17 @@ public class SmartBandageConnService extends Service {
 
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Readings"){
             intent.setAction(CustomActions.SMART_BANDAGE_READINGS_AVAILABLE);
-            ArrayList<HistoricalReading> readings = SmartBandage.parseReadings(characteristic.getValue());
+            ArrayList<HistoricalReading> readings = SmartBandage.parseReadings(BandageId, characteristic.getValue());
             intent.putExtra("EXTRA_DATA", readings);
             sendBroadcast(intent);
 
-            if (null != readings) {
-                for (HistoricalReading reading : readings) {
-                    if (null != reading) {
-                        sendParsedData(reading);
-                    }
+            if (null != readings && readings.size() > 0) {
+                for (HistoricalReading reading: readings) {
+                    sendQueue.add(reading);
                 }
             }
+
+            sendReadings();
         }
 
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Reading Size"){
@@ -401,26 +404,17 @@ public class SmartBandageConnService extends Service {
         }
     }
 
-    private SendData sendData;
-    public void sendParsedData(HistoricalReading reading) {
-        int sensorId = 0;
-        String bandageID = "14";
-        String readingTime = Long.toString(reading.ReadingTime.getTime()/1000);
-        System.out.printf("Reading Time: %s\n", readingTime);
+    private void sendReadings() {
+        if (sendQueue.size() == 0) {
+            return;
+        }
+
         if (null == sendData) {
             sendData = new SendData();
         }
 
-        for (Double item: reading.Temperatures) {
-            sendData.insertToDatabase("temp", bandageID, Integer.toString(sensorId++), readingTime, Double.toString(item));
-        }
-
-        for (Double item: reading.Humidities) {
-            sendData.insertToDatabase("humidity", bandageID, Integer.toString(sensorId++), readingTime, Double.toString(item));
-        }
-
-        for (Double item: reading.Moistures) {
-            sendData.insertToDatabase("moisture", bandageID, Integer.toString(sensorId++), readingTime, Double.toString(item));
-        }
+        List<HistoricalReading> readings = new ArrayList<>(Arrays.asList(sendQueue.toArray(new HistoricalReading[sendQueue.size()])));
+        sendQueue.removeAll(readings);
+        sendData.bulkInsertToDatabase(readings);
     }
 }

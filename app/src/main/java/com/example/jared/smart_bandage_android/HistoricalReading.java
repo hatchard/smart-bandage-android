@@ -28,6 +28,7 @@ public class HistoricalReading implements Serializable {
     public ReadingList Humidities = new ReadingList();
     public ReadingList Moistures = new ReadingList();
     public Date ReadingTime;
+    public Integer BandageId;
 
     public static HistoricalReading FromRawData(long referenceTime, byte[] data, int offset) {
         if (null == Offsets) {
