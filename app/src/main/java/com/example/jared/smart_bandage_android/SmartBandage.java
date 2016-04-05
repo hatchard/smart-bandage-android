@@ -183,4 +183,6 @@ public class SmartBandage implements Serializable{
 
         return HistoricalReading.Offsets;
     }
+
+
 }

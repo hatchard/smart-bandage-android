@@ -166,7 +166,7 @@ public class SmartBandageConnService extends Service {
             } else {
                 System.err.println("Application MTU size update failed. Current MTU: " + Integer.toString(mtu));
                 try {
-                    wait(2000);
+                    wait(200);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -200,6 +200,14 @@ public class SmartBandageConnService extends Service {
 
             } else {
                 System.err.println("BLE read failed: " + characteristic.getUuid().toString() + ", status: " + Integer.toString(status));
+                try {
+                    wait(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                gatt.readCharacteristic(characteristic);
+                System.out.println("Trying again to read characteristic");
             }
         }
 
@@ -214,6 +222,14 @@ public class SmartBandageConnService extends Service {
                 }
             } else {
                 System.err.println("BLE write failed" + String.valueOf(status));
+                try {
+                    wait(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                gatt.writeCharacteristic(characteristic);
+                System.out.println("Trying again to read characteristic");
             }
         }
 
@@ -231,6 +247,14 @@ public class SmartBandageConnService extends Service {
                 System.out.println("Bluetooth descriptor write success: " + descriptor.getUuid().toString());
             } else {
                 System.err.println("Bluetooth descriptor write failed: " + descriptor.getUuid().toString());
+                try {
+                    wait(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                gatt.writeDescriptor(descriptor);
+                System.out.println("Trying again to write descriptor");
             }
         }
 
@@ -242,6 +266,14 @@ public class SmartBandageConnService extends Service {
                 System.out.println("Bluetooth descriptor read success: " + descriptor.getUuid().toString());
             } else {
                 System.err.println("Bluetooth descriptor read failed: " + descriptor.getUuid().toString());
+                try {
+                    wait(200);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                gatt.readDescriptor(descriptor);
+                System.out.println("Trying again to read descriptor");
             }
         }
     };

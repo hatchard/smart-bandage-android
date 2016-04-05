@@ -9,12 +9,10 @@ package com.example.jared.smart_bandage_android;
         import android.net.NetworkInfo;
         import android.os.Bundle;
         import android.support.v7.app.AppCompatActivity;
-        import android.text.TextUtils;
         import android.util.Log;
         import android.view.Menu;
         import android.view.MenuInflater;
         import android.view.MenuItem;
-        import android.widget.EditText;
         import android.widget.ListView;
         import java.text.DecimalFormat;
 
@@ -111,7 +109,6 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         String recordType;
-        String bandageID = "88";
         String sensorID;
         String creationTime;
         String value;
