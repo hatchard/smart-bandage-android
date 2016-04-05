@@ -35,6 +35,10 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     String humidityData;
     String moistureData;
     FileIO fileIO = new FileIO();
+    DisplayModel displayModelTemperature = DisplayModels.getInstance().getTemperatureDM();
+    DisplayModel displayModelHumidity = DisplayModels.getInstance().getHumidityDM();
+    DisplayModel displayModelMoisture = DisplayModels.getInstance().getMoistureDM();
+
     //EditText bandageID = (EditText) findViewById(R.id.bandageID);
    // String bandageID = "1234";
     public static String DEVICE_LIST ="deviceList";
@@ -136,7 +140,8 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 //Bundle bundle = getIntent().getExtras();
                 float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
                 avg = format.format(findAverage(dataArray));
-                setTempData(avg + "\u00b0C");
+                //setTempData(avg + "\u00b0C");
+                displayModelTemperature.setBandageData(avg + "\u00b0C");
 
                 for (int i = 0; i < dataArray.length; ++i) {
                     sendData = new SendData();
@@ -152,7 +157,8 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 recordType = "humidity";
                 float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
                 avg = format.format(findAverage(dataArray));
-                setHumidityData(avg + "% RH");
+                //setHumidityData(avg + "% RH");
+                displayModelHumidity.setBandageData(avg + "% RH");
 
                 for (int i = 0; i < dataArray.length; ++i) {
                     sendData = new SendData();
@@ -168,7 +174,8 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 recordType = "moisture";
                 float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
                 avg = format.format(findAverage(dataArray));
-                setMoistureData(avg + "%");
+                //setMoistureData(avg + "%");
+                displayModelMoisture.setBandageData(avg + "%");
 
                 for (int i = 0; i < dataArray.length; ++i) {
                     sendData = new SendData();
@@ -290,12 +297,21 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         // setListAdapter(adapter);
     }
 
-
+/*
     private ArrayList<DisplayModel> generateData(){
         ArrayList<DisplayModel> models = new ArrayList<DisplayModel>();
         models.add(new DisplayModel(R.drawable.thermometer,"Temperature: ", getTempData()));
         models.add(new DisplayModel(R.drawable.cloud,"Humidity: ", getHumidityData()));
         models.add(new DisplayModel(R.drawable.raindrop, "Moisture: ", getMoistureData()));
+
+        return models;
+    }*/
+
+    private ArrayList<DisplayModel> generateData() {
+        ArrayList<DisplayModel> models = new ArrayList<DisplayModel>();
+        models.add(displayModelTemperature);
+        models.add(displayModelHumidity);
+        models.add(displayModelMoisture);
 
         return models;
     }

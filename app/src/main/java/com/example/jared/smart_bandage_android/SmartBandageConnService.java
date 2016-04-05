@@ -86,7 +86,6 @@ public class SmartBandageConnService extends Service {
 
             mBluetoothGatt = bluetoothAdapter.getRemoteDevice(key).connectGatt(this, true, mGattCallback);
         }
-        //mBluetoothGatt = bluetoothAdapter.getRemoteDevice(device.getBandageAddress()).connectGatt(this, true, myCallback);
     }
 
     @Override

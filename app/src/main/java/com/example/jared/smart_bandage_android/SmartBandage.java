@@ -26,6 +26,7 @@ public class SmartBandage implements Serializable{
     public final static boolean DISCONNECTED = false;
     private String bandageName;
     private String bandageAddress;
+    private boolean isActive;
     private boolean bandageConnectionStatus = false;
 
     public SmartBandage() {
@@ -47,17 +48,11 @@ public class SmartBandage implements Serializable{
         return bandageName;
     }
 
-    public void setBandageName(String bandageName) {
-        this.bandageName = bandageName;
-    }
 
     public String getBandageAddress() {
         return bandageAddress;
     }
 
-    public void setBandageAddress(String bandageAddress) {
-        this.bandageAddress = bandageAddress;
-    }
 
     public void setBandageConnectionStatus(boolean status) {
         this.bandageConnectionStatus = status;
