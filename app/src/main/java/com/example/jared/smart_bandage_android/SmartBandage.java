@@ -27,7 +27,6 @@ public class SmartBandage implements Serializable{
     private String bandageName;
     private String bandageAddress;
     private boolean bandageConnectionStatus = false;
-    FileIO fileIO;
 
     public SmartBandage(ScanRecord record,String bandageAddress) {
         this.bandageAddress = bandageAddress;
@@ -92,12 +91,10 @@ public class SmartBandage implements Serializable{
         return tempArray;
     }
     public static int parseID(byte[] data){
-
-        return 1;
+        return ReadingList.parse16BitLittleEndian(data, 0);
     }
     public static int parseState(byte[] data){
-
-        return 1;
+        return ReadingList.parse16BitLittleEndian(data, 0);
     }
     public static double parseBattery(byte[] data){
         int count = 0;
@@ -111,8 +108,7 @@ public class SmartBandage implements Serializable{
         return readingValue;
     }
     public static int parseExtPower(byte[] data){
-
-        return 1;
+        return (0x0FF & data[0]);
     }
     public static float[] parseMoisture(byte[] data){
         double temp;
@@ -154,12 +150,19 @@ public class SmartBandage implements Serializable{
         return stringBuilder.toString();
     }
 
-    public static ArrayList<HistoricalReading> parseReadings(byte[] data) {
+    public static ArrayList<HistoricalReading> parseReadings(Integer bandageId, byte[] data) {
         ArrayList<HistoricalReading> returnList = new ArrayList<>();
         long referenceTime = ReadingList.parse32BitLittleEndian(data, 0);
 
         for (int i = 0; i < (data.length - HistoricalReading.HistoricalReadingDataOffsets.RefTimeSize)/22; ++i) {
-            returnList.add(HistoricalReading.FromRawData(referenceTime, data, i * 22 + HistoricalReading.HistoricalReadingDataOffsets.RefTimeSize));
+            HistoricalReading reading = HistoricalReading.FromRawData(referenceTime, data, i * 22 + HistoricalReading.HistoricalReadingDataOffsets.RefTimeSize);
+
+            if (null != reading) {
+                // TODO: Use the actual bandage id
+                reading.BandageId = bandageId;
+                reading.BandageId = 14;
+                returnList.add(reading);
+            }
         }
 
         return returnList;

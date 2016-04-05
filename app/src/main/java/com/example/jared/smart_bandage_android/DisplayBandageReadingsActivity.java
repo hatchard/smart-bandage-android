@@ -17,8 +17,12 @@ package com.example.jared.smart_bandage_android;
         import android.widget.EditText;
         import android.widget.ListView;
 
+<<<<<<< HEAD
         import java.io.FileOutputStream;
         import java.io.IOException;
+=======
+        import java.text.DecimalFormat;
+>>>>>>> 2db319c42da4bd9756a1bcca67c2d47119d0db8f
         import java.util.ArrayList;
         import java.util.Arrays;
         import java.util.HashMap;
@@ -115,6 +119,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
+            DecimalFormat format = new DecimalFormat("#.#");
             if (ACTION_GATT_CONNECTED.equals(action)) {
 
             } else if (ACTION_GATT_DISCONNECTED.equals(action)) {
@@ -135,14 +140,14 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 String avg;
                 //Bundle bundle = getIntent().getExtras();
                 float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
-                avg = findAverage(dataArray);
-                setTempData(avg);
+                avg = format.format(findAverage(dataArray));
+                setTempData(avg + "\u00b0C");
 
                 for (int i = 0; i < dataArray.length; ++i) {
                     sendData = new SendData();
                     sensorID = String.valueOf(i+1);
                     creationTime = "0";
-                    value = String.valueOf(dataArray[i]);
+                    value = String.valueOf(format.format(dataArray[i]));
                    // sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
                 }
             }
@@ -151,14 +156,14 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 String avg;
                 recordType = "humidity";
                 float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
-                avg = findAverage(dataArray);
-                setHumidityData(avg);
+                avg = format.format(findAverage(dataArray));
+                setHumidityData(avg + "% RH");
 
                 for (int i = 0; i < dataArray.length; ++i) {
                     sendData = new SendData();
                     sensorID = String.valueOf(i+10);
                     creationTime = "0";
-                    value = String.valueOf(dataArray[i]);
+                    value = String.valueOf(format.format(dataArray[i]));
                     //sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
                 }
             }
@@ -167,14 +172,14 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 String avg;
                 recordType = "moisture";
                 float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
-                avg = findAverage(dataArray);
-                setMoistureData(avg);
+                avg = format.format(findAverage(dataArray));
+                setMoistureData(avg + "%");
 
                 for (int i = 0; i < dataArray.length; ++i) {
                     sendData = new SendData();
                     sensorID = String.valueOf(i+20);
                     creationTime = "0";
-                    value = String.valueOf(dataArray[i]);
+                    value = String.valueOf(format.format(dataArray[i]));
                     //sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
                 }
             }
@@ -189,6 +194,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 Log.i (TAG, "reading size" + values);
             }
 
+<<<<<<< HEAD
             if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
                 ArrayList<HistoricalReading> readings = (ArrayList<HistoricalReading>) intent.getSerializableExtra("EXTRA_DATA");
                 ArrayList<HistoricalReading> fileReadings = new ArrayList<>();
@@ -224,6 +230,23 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                             fileIO.gsonHistoricalSerializer(readings));
                 }
             }
+=======
+//            if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
+//                ArrayList<HistoricalReading> readings = (ArrayList<HistoricalReading>) intent.getSerializableExtra("EXTRA_DATA");
+//
+//                if (null == readings) {
+//                    return;
+//                }
+//
+//                for (HistoricalReading reading: readings) {
+//                    if (null == reading) {
+//                        continue;
+//                    }
+//
+//                    sendParsedData(reading);
+//                }
+//            }
+>>>>>>> 2db319c42da4bd9756a1bcca67c2d47119d0db8f
 
             updateActivity();
         }
@@ -253,15 +276,15 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         }
     }
 
-    public String findAverage(float[] dataArray) {
-        float sum = 0;
+    public Double findAverage(float[] dataArray) {
+        double sum = 0;
         int count = 0;
 
         for (int i = 0; i < dataArray.length; ++i) {
             count++;
             sum += dataArray[i];
         }
-        return String.valueOf(sum/count);
+        return sum/count;
     }
 
     // http://stackoverflow.com/questions/15698790/broadcast-receiver-for-checking-internet-connection-in-android-app

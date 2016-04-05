@@ -28,14 +28,19 @@ public class HistoricalReading implements Serializable {
     public ReadingList Humidities = new ReadingList();
     public ReadingList Moistures = new ReadingList();
     public Date ReadingTime;
+    public Integer BandageId;
 
     public static HistoricalReading FromRawData(long referenceTime, byte[] data, int offset) {
         if (null == Offsets) {
             return null;
         }
 
-        HistoricalReading reading = new HistoricalReading(referenceTime,
-                ReadingList.parse16BitLittleEndian(data, offset + Offsets.TimeDiffOffset));
+        int timeDiff = ReadingList.parse16BitLittleEndian(data, offset + Offsets.TimeDiffOffset);
+        if (0 == timeDiff) {
+            return null;
+        }
+
+        HistoricalReading reading = new HistoricalReading(referenceTime, timeDiff);
 
         for (int i = 0; i < Offsets.TemperatureCount; ++i) {
             int baseOffset = HistoricalReadingDataOffsets.TemperatureSize * i + Offsets.TemperatureOffset + offset;
