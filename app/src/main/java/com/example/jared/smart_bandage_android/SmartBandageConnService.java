@@ -36,6 +36,7 @@ public class SmartBandageConnService extends Service {
     Queue<HistoricalReading> sendQueue = new LinkedList<>();
     private SendData sendData;
     private Integer BandageId;
+    private SmartBandage smartBandage;
     public Queue<BluetoothGattCharacteristic> bleReadQueue = new LinkedList<>();
     BluetoothGatt mBluetoothGatt;
     public final static String ACTION_GATT_CONNECTED =
@@ -79,7 +80,7 @@ public class SmartBandageConnService extends Service {
         startForeground(CustomActions.FOREGROUND_SERVICE_ID, notification);
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
-
+        smartBandage = new SmartBandage(); //TODO add in stuff
         for (String key : rememberedBandages.keySet()){
             Log.i(TAG,"Device " + key );
 
@@ -317,7 +318,7 @@ public class SmartBandageConnService extends Service {
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
             Log.i(TAG, "TEMP value to send: " + characteristic.getValue());
-            intent.putExtra("DATA_ARRAY", ArrayPasser.pack(SmartBandage.parseTemp(characteristic.getValue())));
+            intent.putExtra("DATA_ARRAY", ArrayPasser.pack(smartBandage.parseTemp(characteristic.getValue())));
             sendBroadcast(intent);
         }
 
@@ -326,31 +327,31 @@ public class SmartBandageConnService extends Service {
             Log.i(TAG, "HUMIDITY: " + characteristic.getValue().toString());
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
-            intent.putExtra("DATA_ARRAY",ArrayPasser.pack(SmartBandage.parseHumidity(characteristic.getValue())));
+            intent.putExtra("DATA_ARRAY",ArrayPasser.pack(smartBandage.parseHumidity(characteristic.getValue())));
             sendBroadcast(intent);
         }
 
         if (SampleGattAttributes.SMART_BANDAGE_ID.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.BANDAGE_ID_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", BandageId = SmartBandage.parseID(characteristic.getValue()));
+            intent.putExtra("EXTRA_DATA", BandageId = smartBandage.parseID(characteristic.getValue()));
             sendBroadcast(intent);
         }
 
         if (SampleGattAttributes.SMART_BANDAGE_STATE.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.BANDAGE_STATE_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseState(characteristic.getValue()));
+            intent.putExtra("EXTRA_DATA", smartBandage.parseState(characteristic.getValue()));
             sendBroadcast(intent);
         }
 
         if(SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Battery Charge"){
             intent.setAction(CustomActions.BANDAGE_BATT_CHRG_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseBattery(characteristic.getValue()));
+            intent.putExtra("EXTRA_DATA", smartBandage.parseBattery(characteristic.getValue()));
             sendBroadcast(intent);
         }
 
         if (SampleGattAttributes.SMART_BANDAGE_EXTERNAL_POWER.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.EXT_POWER_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseExtPower(characteristic.getValue()));
+            intent.putExtra("EXTRA_DATA", smartBandage.parseExtPower(characteristic.getValue()));
             sendBroadcast(intent);
         }
 
@@ -359,20 +360,20 @@ public class SmartBandageConnService extends Service {
             Log.i(TAG, "HUMIDITY: " + characteristic.getValue().toString());
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.MOISTURE_DATA_AVAILABLE);
-            intent.putExtra("DATA_ARRAY", ArrayPasser.pack(SmartBandage.parseMoisture(characteristic.getValue())));
+            intent.putExtra("DATA_ARRAY", ArrayPasser.pack(smartBandage.parseMoisture(characteristic.getValue())));
             sendBroadcast(intent);
         }
 
         if (SampleGattAttributes.SMART_BANDAGE_SYS_TIME.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.SYS_TIME_DATA_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic.getValue()));
+            intent.putExtra("EXTRA_DATA", smartBandage.parseSysTime(characteristic.getValue()));
             sendBroadcast(intent);
         }
 
 
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Readings"){
             intent.setAction(CustomActions.SMART_BANDAGE_READINGS_AVAILABLE);
-            ArrayList<HistoricalReading> readings = SmartBandage.parseReadings(BandageId, characteristic.getValue());
+            ArrayList<HistoricalReading> readings = smartBandage.parseReadings(BandageId, characteristic.getValue());
             intent.putExtra("EXTRA_DATA", readings);
             sendBroadcast(intent);
 
@@ -387,23 +388,23 @@ public class SmartBandageConnService extends Service {
 
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Reading Size"){
             intent.setAction(CustomActions.SMART_BANDAGE_READING_SIZE_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseReadingSize(characteristic.getValue()));
+            intent.putExtra("EXTRA_DATA", smartBandage.parseReadingSize(characteristic.getValue()));
             broadcastQueue.add(intent);
         }
 
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Reading Count"){
             intent.setAction(CustomActions.SMART_BANDAGE_READING_COUNT_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseReadingCount(characteristic.getValue()));
+            intent.putExtra("EXTRA_DATA", smartBandage.parseReadingCount(characteristic.getValue()));
             broadcastQueue.add(intent);
         }
 
         if (SmartBandageGatt.UUID_READING_DATA_OFFSETS.equals(characteristic.getUuid())){
             intent.setAction(CustomActions.SMART_BANDAGE_DATA_OFFSETS_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseDataOffsets(characteristic.getValue()));
+            intent.putExtra("EXTRA_DATA", smartBandage.parseDataOffsets(characteristic.getValue()));
             broadcastQueue.add(intent);
         }
     }
-    
+
     private void sendReadings() {
         if (sendQueue.size() == 0) {
             return;

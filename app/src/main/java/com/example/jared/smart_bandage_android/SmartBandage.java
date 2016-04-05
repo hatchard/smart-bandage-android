@@ -28,6 +28,10 @@ public class SmartBandage implements Serializable{
     private String bandageAddress;
     private boolean bandageConnectionStatus = false;
 
+    public SmartBandage() {
+
+    }
+
     public SmartBandage(ScanRecord record,String bandageAddress) {
         this.bandageAddress = bandageAddress;
         this.bandageName = record.getDeviceName();
@@ -64,7 +68,7 @@ public class SmartBandage implements Serializable{
     }
 
 
-    public static float[] parseTemp(byte[] data){
+     float[] parseTemp(byte[] data){
 
         //int count = 0;
         float[] tempArray = new float[data.length/2];
@@ -81,7 +85,7 @@ public class SmartBandage implements Serializable{
     }
 
 
-    public static float[] parseHumidity(byte[] data){
+      float[] parseHumidity(byte[] data){
         double temp;
         float[] tempArray = new float[data.length/2];
         for (int i = 0; i < data.length/2; ++i) {
@@ -90,13 +94,13 @@ public class SmartBandage implements Serializable{
         }
         return tempArray;
     }
-    public static int parseID(byte[] data){
+    int parseID(byte[] data){
         return ReadingList.parse16BitLittleEndian(data, 0);
     }
-    public static int parseState(byte[] data){
+    int parseState(byte[] data){
         return ReadingList.parse16BitLittleEndian(data, 0);
     }
-    public static double parseBattery(byte[] data){
+     double parseBattery(byte[] data){
         int count = 0;
         double sum = 0;
         double readingValue;
@@ -107,10 +111,10 @@ public class SmartBandage implements Serializable{
         readingValue = sum/count;
         return readingValue;
     }
-    public static int parseExtPower(byte[] data){
+     int parseExtPower(byte[] data){
         return (0x0FF & data[0]);
     }
-    public static float[] parseMoisture(byte[] data){
+     float[] parseMoisture(byte[] data){
         double temp;
         float[] tempArray = new float[data.length/2];
         for (int i = 0; i < data.length/2; ++i) {
@@ -124,11 +128,11 @@ public class SmartBandage implements Serializable{
     }
 
 
-    public static long parseSysTime(byte[] data){
+    long parseSysTime(byte[] data){
         return ReadingList.parse32BitLittleEndian(data, 0);
     }
 
-    public static String parseReadingSize(byte[] data) {
+    String parseReadingSize(byte[] data) {
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Reading Size: \n");
         for (int i = 0; i < data.length/2; ++i) {
@@ -138,7 +142,7 @@ public class SmartBandage implements Serializable{
         return stringBuilder.toString();
     }
 
-    public static String parseReadingCount(byte[] data) {
+    String parseReadingCount(byte[] data) {
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Number of Available Readings: \n");
         int value = 0;
@@ -150,7 +154,7 @@ public class SmartBandage implements Serializable{
         return stringBuilder.toString();
     }
 
-    public static ArrayList<HistoricalReading> parseReadings(Integer bandageId, byte[] data) {
+    ArrayList<HistoricalReading> parseReadings(Integer bandageId, byte[] data) {
         ArrayList<HistoricalReading> returnList = new ArrayList<>();
         long referenceTime = ReadingList.parse32BitLittleEndian(data, 0);
 
@@ -168,7 +172,7 @@ public class SmartBandage implements Serializable{
         return returnList;
     }
 
-    public static HistoricalReading.HistoricalReadingDataOffsets parseDataOffsets(final byte[] data) {
+    public HistoricalReading.HistoricalReadingDataOffsets parseDataOffsets(final byte[] data) {
         final int offsetSize = 2;
 
         HistoricalReading.Offsets = new HistoricalReading.HistoricalReadingDataOffsets() {{

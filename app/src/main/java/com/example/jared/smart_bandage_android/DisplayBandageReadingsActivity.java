@@ -16,13 +16,8 @@ package com.example.jared.smart_bandage_android;
         import android.view.MenuItem;
         import android.widget.EditText;
         import android.widget.ListView;
-
-<<<<<<< HEAD
-        import java.io.FileOutputStream;
-        import java.io.IOException;
-=======
         import java.text.DecimalFormat;
->>>>>>> 2db319c42da4bd9756a1bcca67c2d47119d0db8f
+
         import java.util.ArrayList;
         import java.util.Arrays;
         import java.util.HashMap;
@@ -194,7 +189,6 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 Log.i (TAG, "reading size" + values);
             }
 
-<<<<<<< HEAD
             if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
                 ArrayList<HistoricalReading> readings = (ArrayList<HistoricalReading>) intent.getSerializableExtra("EXTRA_DATA");
                 ArrayList<HistoricalReading> fileReadings = new ArrayList<>();
@@ -215,13 +209,14 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
                         sendParsedData(reading);
                     }
+                    if (fileReadings != null) {
+                        for (HistoricalReading savedReading : fileReadings) {
+                            if (null == savedReading) {
+                                continue;
+                            }
 
-                    for (HistoricalReading savedReading : fileReadings) {
-                        if (null == savedReading) {
-                            continue;
+                            sendParsedData(savedReading);
                         }
-
-                        sendParsedData(savedReading);
                     }
                 } else {
                     Log.d(TAG, "no internet connection, saving data");
@@ -230,23 +225,6 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                             fileIO.gsonHistoricalSerializer(readings));
                 }
             }
-=======
-//            if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
-//                ArrayList<HistoricalReading> readings = (ArrayList<HistoricalReading>) intent.getSerializableExtra("EXTRA_DATA");
-//
-//                if (null == readings) {
-//                    return;
-//                }
-//
-//                for (HistoricalReading reading: readings) {
-//                    if (null == reading) {
-//                        continue;
-//                    }
-//
-//                    sendParsedData(reading);
-//                }
-//            }
->>>>>>> 2db319c42da4bd9756a1bcca67c2d47119d0db8f
 
             updateActivity();
         }
