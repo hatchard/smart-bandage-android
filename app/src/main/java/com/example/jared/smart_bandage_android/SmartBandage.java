@@ -66,6 +66,11 @@ public class SmartBandage implements Serializable{
     public SmartBandage(Context context, BluetoothDevice bleDevice) {
         this.bandageAddress = bleDevice.getAddress();
         this.bandageName = bleDevice.getName();
+
+        if (null == this.bandageName) {
+            bandageName = "Smart Bandage";
+        }
+
         this.context = context;
         this.selfRef = this;
         SetBLEParams(context, bleDevice);
@@ -100,7 +105,7 @@ public class SmartBandage implements Serializable{
         getCurrentReadings().Temperatures.clear();
         currentReadings.parseTemperatureArray(data, 0);
 
-        return currentReadings.Temperatures.toArray(new Double[] {});
+        return currentReadings.Temperatures.toArray(new Double[]{});
     }
 
     private Double[] parseHumidity(byte[] data){
@@ -218,9 +223,18 @@ public class SmartBandage implements Serializable{
     }
 
      BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
+         private Object lock = new Object();
+
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
+                if (null == bandageName || bandageName.length() == 0) {
+                    bandageName = gatt.getDevice().getName();
+                    if (null == bandageName) {
+                        bandageName = "Smart Bandage";
+                    }
+                }
+
                 bandageConnectionStatus = true;
                 Log.i(TAG, "Connected to GATT server in service.");
                 // Attempts to discover services after successful connection.
@@ -253,6 +267,18 @@ public class SmartBandage implements Serializable{
 
             } else {
                 Log.w(TAG, "onServicesDiscovered received: " + status);
+                try {
+                    synchronized (lock) {
+                        lock.wait(200);
+                    }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (IllegalMonitorStateException e) {
+                    e.printStackTrace();
+                }
+
+                Log.w("SmartBandage", "Retry service discovery");
+                gatt.discoverServices();
             }
         }
 
@@ -278,8 +304,12 @@ public class SmartBandage implements Serializable{
             } else {
                 System.err.println("Application MTU size update failed. Current MTU: " + Integer.toString(mtu));
                 try {
-                    wait(200);
+                    synchronized (lock) {
+                        lock.wait(200);
+                    }
                 } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (IllegalMonitorStateException e) {
                     e.printStackTrace();
                 }
 
@@ -313,8 +343,12 @@ public class SmartBandage implements Serializable{
             } else {
                 System.err.println("BLE read failed: " + characteristic.getUuid().toString() + ", status: " + Integer.toString(status));
                 try {
-                    wait(200);
+                    synchronized (lock) {
+                        lock.wait(200);
+                    }
                 } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (IllegalMonitorStateException e) {
                     e.printStackTrace();
                 }
 
@@ -335,8 +369,12 @@ public class SmartBandage implements Serializable{
             } else {
                 System.err.println("BLE write failed" + String.valueOf(status));
                 try {
-                    wait(200);
+                    synchronized (lock) {
+                        lock.wait(200);
+                    }
                 } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (IllegalMonitorStateException e) {
                     e.printStackTrace();
                 }
 
@@ -360,8 +398,12 @@ public class SmartBandage implements Serializable{
             } else {
                 System.err.println("Bluetooth descriptor write failed: " + descriptor.getUuid().toString());
                 try {
-                    wait(200);
+                    synchronized (lock) {
+                        lock.wait(200);
+                    }
                 } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (IllegalMonitorStateException e) {
                     e.printStackTrace();
                 }
 
@@ -379,8 +421,12 @@ public class SmartBandage implements Serializable{
             } else {
                 System.err.println("Bluetooth descriptor read failed: " + descriptor.getUuid().toString());
                 try {
-                    wait(200);
+                    synchronized (lock) {
+                        lock.wait(200);
+                    }
                 } catch (InterruptedException e) {
+                    e.printStackTrace();
+                } catch (IllegalMonitorStateException e) {
                     e.printStackTrace();
                 }
 

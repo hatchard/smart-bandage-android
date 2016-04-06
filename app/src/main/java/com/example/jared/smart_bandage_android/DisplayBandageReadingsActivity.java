@@ -14,6 +14,9 @@ package com.example.jared.smart_bandage_android;
         import android.view.MenuInflater;
         import android.view.MenuItem;
         import android.widget.ListView;
+        import android.widget.TextView;
+        import android.widget.Toast;
+
         import java.text.DecimalFormat;
         import java.util.ArrayList;
         import java.util.HashMap;
@@ -74,6 +77,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+        updateActivity();
     }
 
     @Override
@@ -122,77 +126,14 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 bandage = deviceList.get(bandageAddr);
             }
 
-            if (ACTION_GATT_CONNECTED.equals(action)) {
-
-            } else if (ACTION_GATT_DISCONNECTED.equals(action)) {
-
-            } else if (ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                // Show all the supported services and characteristics on the user interface.
-                //displayGattServices(mBluetoothGatt.getServices());
-
-            } else if (ACTION_DATA_AVAILABLE.equals(action)) {
-                // Toast.makeText(DisplayBandageReadingsActivity.this, intent.getStringExtra(EXTRA_DATA), Toast.LENGTH_SHORT).show();
+            if (CustomActions.ACTION_GATT_CONNECTED.equals(action)) {
+                Toast toast = Toast.makeText(context, "Smart Bandage Connected", Toast.LENGTH_SHORT);
+                toast.show();
+            } else if (CustomActions.ACTION_GATT_DISCONNECTED.equals(action)) {
+                Toast toast = Toast.makeText(context, "Smart Bandage Disconnected", Toast.LENGTH_SHORT);
+                toast.show();
             }
-
-            if (CustomActions.BANDAGE_TEMP_AVAILABLE.equals(action)) {
-                displayModelTemperature.setBandageData(getDisplayNumber(bandage.GetTemperatures()) + "\u00b0C");
-            }
-
-            if (CustomActions.BANDAGE_HUMIDITY_AVAILABLE.equals(action)) {
-                displayModelHumidity.setBandageData(getDisplayNumber(bandage.GetHumidities()) + "% RH");
-            }
-
-            if (CustomActions.MOISTURE_DATA_AVAILABLE.equals(action)) {
-                displayModelMoisture.setBandageData(getDisplayNumber(bandage.GetMoistures()) + "%");
-            }
-
-            if(CustomActions.SMART_BANDAGE_READING_COUNT_AVAILABLE.equals(action)){
-                String values = intent.getStringExtra("EXTRA_DATA");
-                Log.i (TAG, "reading count" + values);
-            }
-
-            if (CustomActions.SMART_BANDAGE_READING_SIZE_AVAILABLE.equals(action)) {
-                String values = intent.getStringExtra("EXTRA_DATA");
-                Log.i (TAG, "reading size" + values);
-            }
-//
-//            if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
-//                ArrayList<HistoricalReading> readings = (ArrayList<HistoricalReading>) intent.getSerializableExtra("EXTRA_DATA");
-//                ArrayList<HistoricalReading> fileReadings = new ArrayList<>();
-//
-//                if (null == readings) {
-//                    return;
-//                }
-//
-//                if(isOnline(context)) {
-//                    String json = fileIO.readFile(getFilesDir() +
-//                            FileIO.SAVE_HISTORICAL_DATA);
-//                    fileReadings = fileIO.gsonHistoricalDeserializer(json);
-//
-//                    for (HistoricalReading reading: readings) {
-//                        if (null == reading) {
-//                            continue;
-//                        }
-//
-//                        sendParsedData(reading);
-//                    }
-//                    if (fileReadings != null) {
-//                        for (HistoricalReading savedReading : fileReadings) {
-//                            if (null == savedReading) {
-//                                continue;
-//                            }
-//
-//                            sendParsedData(savedReading);
-//                        }
-//                    }
-//                } else {
-//                    Log.d(TAG, "no internet connection, saving data");
-//                    fileIO.writeFile(getFilesDir() + FileIO.SAVE_HISTORICAL_DATA,
-//                            false,
-//                            fileIO.gsonHistoricalSerializer(readings));
-//                }
-//            }
-
+            
             updateActivity();
         }
     };
@@ -204,8 +145,15 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         // if extending Activity 2. Get ListView from activity_main.xml
         ListView listView = (ListView) findViewById(R.id.listView);
 
+        TextView statusView = (TextView) findViewById(R.id.statusTextView);
+
         // 3. setListAdapter
         listView.setAdapter(adapter);// if extending Activity
+        if (null != bandage) {
+            statusView.setText("Status: " + (bandage.getBandageConnectionStatus() ? "Connected" : "Disconnected"));
+        } else {
+            statusView.setText("Status: Disconnected");
+        }
 //        listView.invalidate();
 //        listView.invalidateViews();
 //        BandageReadingAdapter adapter = (BandageReadingAdapter) listView.getAdapter();
@@ -229,11 +177,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     private ArrayList<DisplayModel> generateData() {
         ArrayList<DisplayModel> models = new ArrayList<DisplayModel>();
 
-        if (null != bandage) {
-            displayModelTemperature.setBandageData(getDisplayNumber(bandage.GetTemperatures()) + "\u00b0C");
-            displayModelHumidity.setBandageData(getDisplayNumber(bandage.GetHumidities()) + "% RH");
-            displayModelMoisture.setBandageData(getDisplayNumber(bandage.GetMoistures()) + "%");
-        }
+        updateDisplayValues();
 
         models.add(displayModelTemperature);
         models.add(displayModelHumidity);
@@ -242,13 +186,21 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         return models;
     }
 
-    private String getDisplayNumber(ReadingList list) {
+    private void updateDisplayValues() {
+        if (null != bandage) {
+            displayModelTemperature.setBandageData(getDisplayNumber(bandage.GetTemperatures(), "\u00b0C"));
+            displayModelHumidity.setBandageData(getDisplayNumber(bandage.GetHumidities(), "% RH"));
+            displayModelMoisture.setBandageData(getDisplayNumber(bandage.GetMoistures(), "%"));
+        }
+    }
+
+    private String getDisplayNumber(ReadingList list, String units) {
         Double value = list.average();
         if (value.isNaN()) {
             return "";
         }
 
-        return format.format(value);
+        return format.format(value) + units;
     }
 
     public void viewNewConnection() {
