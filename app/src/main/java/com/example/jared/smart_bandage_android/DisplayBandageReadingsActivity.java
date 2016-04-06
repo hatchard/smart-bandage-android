@@ -133,7 +133,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 Toast toast = Toast.makeText(context, "Smart Bandage Disconnected", Toast.LENGTH_SHORT);
                 toast.show();
             }
-            
+
             updateActivity();
         }
     };

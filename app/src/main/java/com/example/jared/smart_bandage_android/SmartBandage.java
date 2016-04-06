@@ -48,7 +48,6 @@ public class SmartBandage implements Serializable{
 
     private SendData sendData = new SendData();
     private Integer BandageId;
-    private boolean isActive;
     private SmartBandage selfRef;
     Queue<Intent> broadcastQueue = new LinkedList<>();
     Queue<HistoricalReading> sendQueue = new LinkedList<>();
@@ -66,6 +65,17 @@ public class SmartBandage implements Serializable{
     public SmartBandage(Context context, BluetoothDevice bleDevice) {
         this.bandageAddress = bleDevice.getAddress();
         this.bandageName = bleDevice.getName();
+
+        if (bandageAddress.equals("F1:F1:F1:F1:F1:F1")) {
+            Log.i("Smart Bandage", "Set device id 14, " + bandageAddress);
+            BandageId = 14;
+        } else if (bandageAddress.equals("24:71:89:17:6A:21")) {
+            Log.i("Smart Bandage", "Set device id 88, " + bandageAddress);
+            BandageId = 88;
+        } else {
+            Log.i("Smart Bandage", "MAC Unknown. Set device id 88, " + bandageAddress);
+            BandageId = 88;
+        }
 
         if (null == this.bandageName) {
             bandageName = "Smart Bandage";
@@ -197,7 +207,6 @@ public class SmartBandage implements Serializable{
             if (null != reading) {
                 // TODO: Use the actual bandage id
                 reading.BandageId = bandageId;
-                reading.BandageId = 14;
                 returnList.add(reading);
             }
         }
