@@ -15,13 +15,9 @@ package com.example.jared.smart_bandage_android;
         import android.view.MenuItem;
         import android.widget.ListView;
         import java.text.DecimalFormat;
-
         import java.util.ArrayList;
-        import java.util.Arrays;
         import java.util.HashMap;
-        import java.util.List;
 
-        import static android.content.Context.MODE_APPEND;
 
 
 public class DisplayBandageReadingsActivity extends AppCompatActivity {
