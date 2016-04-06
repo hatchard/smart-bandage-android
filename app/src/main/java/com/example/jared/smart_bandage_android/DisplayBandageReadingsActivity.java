@@ -17,7 +17,7 @@ package com.example.jared.smart_bandage_android;
         import java.text.DecimalFormat;
         import java.util.ArrayList;
         import java.util.HashMap;
-
+        import java.util.Map;
 
 
 public class DisplayBandageReadingsActivity extends AppCompatActivity {
@@ -29,16 +29,18 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     String humidityData;
     String moistureData;
     FileIO fileIO = new FileIO();
+    String bandageAddr;
     DisplayModel displayModelTemperature = DisplayModels.getInstance().getTemperatureDM();
     DisplayModel displayModelHumidity = DisplayModels.getInstance().getHumidityDM();
     DisplayModel displayModelMoisture = DisplayModels.getInstance().getMoistureDM();
+    DecimalFormat format = new DecimalFormat("#.#");
 
     //EditText bandageID = (EditText) findViewById(R.id.bandageID);
    // String bandageID = "1234";
     public static String DEVICE_LIST ="deviceList";
-    public static HashMap<String,SmartBandage> deviceList;
+    public static Map<String,SmartBandage> deviceList;
+    private SmartBandage bandage;
 
-    public final static String BANDAGE = "BANDAGE";
    // public final static float[] dataValue = "DATA_VALUE";
 
     public final static String ACTION_GATT_CONNECTED =
@@ -57,7 +59,9 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_display_bandage_readings);
         context = this;
         //android.os.Debug.waitForDebugger();
-        deviceList = (HashMap<String,SmartBandage>) getIntent().getSerializableExtra(DEVICE_LIST);
+        deviceList = SmartBandageConnService.getBandages();
+        bandageAddr = (String) getIntent().getSerializableExtra(CustomActions.CURRENT_BANDAGE);
+        bandage = deviceList.get(bandageAddr);
 
         updateActivity();
 
@@ -104,14 +108,20 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     }
 
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
-        String recordType;
-        String sensorID;
-        String creationTime;
-        String value;
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-            DecimalFormat format = new DecimalFormat("#.#");
+
+            String intentBandage = (String) intent.getSerializableExtra(CustomActions.CURRENT_BANDAGE);
+            if (null == intentBandage || !intentBandage.equals(bandageAddr)) {
+                return;
+            }
+
+            if (null == bandage) {
+                deviceList = SmartBandageConnService.getBandages();
+                bandage = deviceList.get(bandageAddr);
+            }
+
             if (ACTION_GATT_CONNECTED.equals(action)) {
 
             } else if (ACTION_GATT_DISCONNECTED.equals(action)) {
@@ -125,58 +135,15 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
             }
 
             if (CustomActions.BANDAGE_TEMP_AVAILABLE.equals(action)) {
-                recordType = "temp";
-
-                //need to actually get this later
-                //bandageID = "1";
-                String avg;
-                //Bundle bundle = getIntent().getExtras();
-                float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
-                avg = format.format(findAverage(dataArray));
-                //setTempData(avg + "\u00b0C");
-                displayModelTemperature.setBandageData(avg + "\u00b0C");
-
-                for (int i = 0; i < dataArray.length; ++i) {
-                    sendData = new SendData();
-                    sensorID = String.valueOf(i+1);
-                    creationTime = "0";
-                    value = String.valueOf(format.format(dataArray[i]));
-                   // sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
-                }
+                displayModelTemperature.setBandageData(getDisplayNumber(bandage.GetTemperatures()) + "\u00b0C");
             }
 
             if (CustomActions.BANDAGE_HUMIDITY_AVAILABLE.equals(action)) {
-                String avg;
-                recordType = "humidity";
-                float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
-                avg = format.format(findAverage(dataArray));
-                //setHumidityData(avg + "% RH");
-                displayModelHumidity.setBandageData(avg + "% RH");
-
-                for (int i = 0; i < dataArray.length; ++i) {
-                    sendData = new SendData();
-                    sensorID = String.valueOf(i+10);
-                    creationTime = "0";
-                    value = String.valueOf(format.format(dataArray[i]));
-                    //sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
-                }
+                displayModelHumidity.setBandageData(getDisplayNumber(bandage.GetHumidities()) + "% RH");
             }
 
             if (CustomActions.MOISTURE_DATA_AVAILABLE.equals(action)) {
-                String avg;
-                recordType = "moisture";
-                float[] dataArray = ArrayPasser.unpack(intent.getStringExtra("DATA_ARRAY"));
-                avg = format.format(findAverage(dataArray));
-                //setMoistureData(avg + "%");
-                displayModelMoisture.setBandageData(avg + "%");
-
-                for (int i = 0; i < dataArray.length; ++i) {
-                    sendData = new SendData();
-                    sensorID = String.valueOf(i+20);
-                    creationTime = "0";
-                    value = String.valueOf(format.format(dataArray[i]));
-                    //sendData.insertToDatabase(recordType,  bandageID,  sensorID,  creationTime, value);
-                }
+                displayModelMoisture.setBandageData(getDisplayNumber(bandage.GetMoistures()) + "%");
             }
 
             if(CustomActions.SMART_BANDAGE_READING_COUNT_AVAILABLE.equals(action)){
@@ -188,92 +155,47 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 String values = intent.getStringExtra("EXTRA_DATA");
                 Log.i (TAG, "reading size" + values);
             }
-
-            if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
-                ArrayList<HistoricalReading> readings = (ArrayList<HistoricalReading>) intent.getSerializableExtra("EXTRA_DATA");
-                ArrayList<HistoricalReading> fileReadings = new ArrayList<>();
-
-                if (null == readings) {
-                    return;
-                }
-
-                if(isOnline(context)) {
-                    String json = fileIO.readFile(getFilesDir() +
-                            FileIO.SAVE_HISTORICAL_DATA);
-                    fileReadings = fileIO.gsonHistoricalDeserializer(json);
-
-                    for (HistoricalReading reading: readings) {
-                        if (null == reading) {
-                            continue;
-                        }
-
-                        sendParsedData(reading);
-                    }
-                    if (fileReadings != null) {
-                        for (HistoricalReading savedReading : fileReadings) {
-                            if (null == savedReading) {
-                                continue;
-                            }
-
-                            sendParsedData(savedReading);
-                        }
-                    }
-                } else {
-                    Log.d(TAG, "no internet connection, saving data");
-                    fileIO.writeFile(getFilesDir() + FileIO.SAVE_HISTORICAL_DATA,
-                            false,
-                            fileIO.gsonHistoricalSerializer(readings));
-                }
-            }
+//
+//            if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
+//                ArrayList<HistoricalReading> readings = (ArrayList<HistoricalReading>) intent.getSerializableExtra("EXTRA_DATA");
+//                ArrayList<HistoricalReading> fileReadings = new ArrayList<>();
+//
+//                if (null == readings) {
+//                    return;
+//                }
+//
+//                if(isOnline(context)) {
+//                    String json = fileIO.readFile(getFilesDir() +
+//                            FileIO.SAVE_HISTORICAL_DATA);
+//                    fileReadings = fileIO.gsonHistoricalDeserializer(json);
+//
+//                    for (HistoricalReading reading: readings) {
+//                        if (null == reading) {
+//                            continue;
+//                        }
+//
+//                        sendParsedData(reading);
+//                    }
+//                    if (fileReadings != null) {
+//                        for (HistoricalReading savedReading : fileReadings) {
+//                            if (null == savedReading) {
+//                                continue;
+//                            }
+//
+//                            sendParsedData(savedReading);
+//                        }
+//                    }
+//                } else {
+//                    Log.d(TAG, "no internet connection, saving data");
+//                    fileIO.writeFile(getFilesDir() + FileIO.SAVE_HISTORICAL_DATA,
+//                            false,
+//                            fileIO.gsonHistoricalSerializer(readings));
+//                }
+//            }
 
             updateActivity();
         }
     };
-
-    public void sendParsedData(HistoricalReading reading) {
-        int sensorId = 0;
-
-        String bandageID = "14";
-        String readingTime = Long.toString(reading.ReadingTime.getTime()/1000);
-        System.out.printf("Reading Time: %s\n", readingTime);
-
-        if (null == sendData) {
-            sendData = new SendData();
-        }
-
-        for (Double item: reading.Temperatures) {
-            sendData.insertToDatabase("temp", bandageID, Integer.toString(sensorId++), readingTime, Double.toString(item));
-        }
-
-        for (Double item: reading.Humidities) {
-            sendData.insertToDatabase("humidity", bandageID, Integer.toString(sensorId++), readingTime, Double.toString(item));
-        }
-
-        for (Double item: reading.Moistures) {
-            sendData.insertToDatabase("moisture", bandageID, Integer.toString(sensorId++), readingTime, Double.toString(item));
-        }
-    }
-
-    public Double findAverage(float[] dataArray) {
-        double sum = 0;
-        int count = 0;
-
-        for (int i = 0; i < dataArray.length; ++i) {
-            count++;
-            sum += dataArray[i];
-        }
-        return sum/count;
-    }
-
-    // http://stackoverflow.com/questions/15698790/broadcast-receiver-for-checking-internet-connection-in-android-app
-    // from stack overflow, user1381827
-    public boolean isOnline(Context context) {
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = cm.getActiveNetworkInfo();
-        //should check null because in air plan mode it will be null
-        return (netInfo != null && netInfo.isConnected());
-
-    }
 
     public void updateActivity(){
         // 1. pass context and data to the custom adapter
@@ -286,7 +208,11 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         listView.setAdapter(adapter);// if extending Activity
 //        listView.invalidate();
 //        listView.invalidateViews();
-//        adapter.notifyDataSetChanged();
+//        BandageReadingAdapter adapter = (BandageReadingAdapter) listView.getAdapter();
+
+//        if (null != adapter) {
+//            adapter.notifyDataSetChanged();
+//        }
         // setListAdapter(adapter);
     }
 
@@ -302,11 +228,27 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
     private ArrayList<DisplayModel> generateData() {
         ArrayList<DisplayModel> models = new ArrayList<DisplayModel>();
+
+        if (null != bandage) {
+            displayModelTemperature.setBandageData(getDisplayNumber(bandage.GetTemperatures()) + "\u00b0C");
+            displayModelHumidity.setBandageData(getDisplayNumber(bandage.GetHumidities()) + "% RH");
+            displayModelMoisture.setBandageData(getDisplayNumber(bandage.GetMoistures()) + "%");
+        }
+
         models.add(displayModelTemperature);
         models.add(displayModelHumidity);
         models.add(displayModelMoisture);
 
         return models;
+    }
+
+    private String getDisplayNumber(ReadingList list) {
+        Double value = list.average();
+        if (value.isNaN()) {
+            return "";
+        }
+
+        return format.format(value);
     }
 
     public void viewNewConnection() {
@@ -319,7 +261,7 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
     public void viewAdvancedView(){
         Log.w("why", "about to go to DeviceServiceViewActivity");
         Intent intent = new Intent(this, ConnectedDevicesAdvancedActivity.class);
-        intent.putExtra(ConnectedDevicesAdvancedActivity.DEVICE_LIST, deviceList);
+//        intent.putExtra(ConnectedDevicesAdvancedActivity.DEVICE_LIST, deviceList);
         // Intent intent = new Intent(this, DeviceServiceViewActivity.class);
         startActivity(intent);
     }
@@ -330,6 +272,8 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         // intentFilter.addAction(ACTION_GATT_DISCONNECTED);
         //intentFilter.addAction(ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(CustomActions.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(CustomActions.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
         intentFilter.addAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
         intentFilter.addAction(CustomActions.MOISTURE_DATA_AVAILABLE);
@@ -339,30 +283,5 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         intentFilter.addAction(CustomActions.SMART_BANDAGE_DATA_OFFSETS_AVAILABLE);
 
         return intentFilter;
-    }
-
-
-    public String getTempData() {
-        return tempData;
-    }
-
-    public void setTempData(String tempData) {
-        this.tempData = tempData;
-    }
-
-    public String getHumidityData() {
-        return humidityData;
-    }
-
-    public void setHumidityData(String humidityData) {
-        this.humidityData = humidityData;
-    }
-
-    public String getMoistureData() {
-        return moistureData;
-    }
-
-    public void setMoistureData(String moistureData) {
-        this.moistureData = moistureData;
     }
 }

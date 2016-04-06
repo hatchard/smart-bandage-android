@@ -12,12 +12,15 @@ import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -28,24 +31,14 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.HashMap;
+import java.util.Map;
 
 
 public class ConnectedDevicesActivity extends AppCompatActivity {
     private final static String TAG = ConnectedDevicesActivity.class.getSimpleName();
 
-    public final static String ACTION_GATT_CONNECTED =
-            "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
-    public final static String ACTION_GATT_DISCONNECTED =
-            "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED";
-    public final static String ACTION_GATT_SERVICES_DISCOVERED =
-            "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
-    public final static String ACTION_DATA_AVAILABLE =
-            "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
-    public final static String EXTRA_DATA =
-            "com.example.bluetooth.le.EXTRA_DATA";
-
     private ConnectionListAdapter connectionListAdapter;
-    public static HashMap<String,SmartBandage> deviceList;
+    public static Map<String, SmartBandage> deviceList;
     public static String DEVICE_LIST ="deviceList";
     private ListView deviceListview;
     private BluetoothAdapter bluetoothAdapter;
@@ -56,81 +49,40 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_connected_devices);
 
-        deviceList = (HashMap<String,SmartBandage>) getIntent().getSerializableExtra(DEVICE_LIST);
-       /* if(deviceList == null) {
-            deviceList = new HashMap<String, SmartBandage>();
-        }*/
+        HashMap<String, SmartBandage> importList = (HashMap<String,SmartBandage>) getIntent().getSerializableExtra(DEVICE_LIST);
+        deviceList = SmartBandageConnService.getBandages();
+        for (String key: importList.keySet()) {
+            if (!deviceList.containsKey(key)) {
+                SmartBandageConnService.addDevice(key);
+            }
+        }
 
         deviceListview = (ListView)findViewById(R.id.listView);
-        deviceConnectionStatus = new HashMap<String,SmartBandage>();
+        deviceConnectionStatus = new HashMap<>();
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
         connectionListAdapter = new ConnectionListAdapter(this);
         deviceListview.setAdapter(connectionListAdapter);
         deviceListview.setOnItemClickListener(listviewListener);
 
-        for(String key : deviceList.keySet()){
-            Log.d(TAG, "Attempting Connection to Device " + key);
-            BluetoothDevice device =  bluetoothAdapter.getRemoteDevice(key);
-            device.connectGatt(this,true,mGattCallback);
-        }
+        connectionListAdapter.addAll(deviceList.values());
+//        for(String key : deviceList.keySet()){
+//            Log.d(TAG, "Attempting Connection to Device " + key);
+//            if (null == deviceList.get(key)) {
+//                deviceList.put(key, new SmartBandage(this, bluetoothAdapter.getRemoteDevice(key)));
+//            }
+//        }
     }
     private OnItemClickListener listviewListener =  new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
             SmartBandage sm = (SmartBandage)parent.getItemAtPosition(position);
-            Log.d(TAG,"Item Selected:" + sm.getBandageName() + " " + sm.getBandageAddress());
+            Log.d(TAG, "Item Selected:" + sm.getBandageName() + " " + sm.getBandageAddress());
             Intent i = new Intent(myself,DisplayBandageReadingsActivity.class);
-            i.putExtra(DisplayBandageReadingsActivity.BANDAGE, sm);
-            i.putExtra(ConnectedDevicesActivity.DEVICE_LIST, deviceList);
+            i.putExtra(CustomActions.CURRENT_BANDAGE, sm.getBandageAddress());
             startActivity(i);
         }
     };
-
-    private BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            String intentAction;
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                SmartBandage sm = new SmartBandage(gatt,SmartBandage.CONNECTED);
-//                Log.i(TAG, "Connected to GATT server.");
-//                // Attempts to discover services after successful connection.
-                processResult(sm);
-//                Log.i(TAG, "Attempting to start service discovery:" +
-//                        gatt.discoverServices());
-
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.i(TAG, "Disconnected from GATT server.");
-                SmartBandage sm = new SmartBandage(gatt,SmartBandage.DISCONNECTED);
-                processResult(sm);
-            }
-        }
-
-        @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-
-            } else {
-                Log.w(TAG, "onServicesDiscovered received: " + status);
-            }
-        }
-
-        @Override
-        public void onCharacteristicRead(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic characteristic,
-                                         int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-
-            }
-        }
-
-        @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt,
-                                            BluetoothGattCharacteristic characteristic) {
-
-        }
-    };
-
 
     private class ConnectionListAdapter extends ArrayAdapter<SmartBandage> {
 
@@ -145,6 +97,10 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
                         .inflate(R.layout.connection_status_layout, viewGroup, false);
             }
             final SmartBandage smartBandage = getItem(position);
+
+            if (null == smartBandage) {
+                return convertView;
+            }
 
             TextView deviceName = (TextView) convertView.findViewById(R.id.connectionName);
             deviceName.setText(smartBandage.getBandageName());
@@ -161,7 +117,6 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
                 deviceConnectionStatus.setText("Disconnected");
                 //convertView.setBackgroundColor(getResources().getColor(android.R.color.holo_red_light, null));
             }
-
 
             return convertView;
         }
@@ -183,6 +138,37 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
             connectionListAdapter.clear();
             connectionListAdapter.addAll(deviceConnectionStatus.values());
             connectionListAdapter.notifyDataSetChanged();
+        }
+    };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        unregisterReceiver(mGattUpdateReceiver);
+    }
+
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(CustomActions.ACTION_GATT_CONNECTED);
+        intentFilter.addAction(CustomActions.ACTION_GATT_DISCONNECTED);
+
+        return intentFilter;
+    }
+
+    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            if (CustomActions.ACTION_GATT_CONNECTED.equals(action) || CustomActions.ACTION_GATT_DISCONNECTED.equals(action)) {
+                connectionListAdapter.notifyDataSetChanged();
+            }
         }
     };
 }

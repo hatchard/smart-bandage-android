@@ -1,6 +1,7 @@
 package com.example.jared.smart_bandage_android;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -12,6 +13,7 @@ import android.bluetooth.le.ScanRecord;
 import android.content.Intent;
 import android.os.ParcelUuid;
 
+import android.support.annotation.RequiresPermission;
 import android.util.Log;
 
 import java.io.File;
@@ -38,37 +40,42 @@ public class SmartBandage implements Serializable{
     public final static boolean CONNECTED = true;
     public final static boolean DISCONNECTED = false;
     Context context;
-    BluetoothAdapter bluetoothAdapter;
     private String bandageName;
-    BluetoothGatt mBluetoothGatt;
+    private BluetoothGatt mBluetoothGatt;
     public Queue<BluetoothGattCharacteristic> bleReadQueue = new LinkedList<>();
     private String bandageAddress;
+    private HistoricalReading currentReadings = new HistoricalReading(0, 0);
 
-
-    private SendData sendData;
+    private SendData sendData = new SendData();
     private Integer BandageId;
     private boolean isActive;
+    private SmartBandage selfRef;
     Queue<Intent> broadcastQueue = new LinkedList<>();
     Queue<HistoricalReading> sendQueue = new LinkedList<>();
     private boolean bandageConnectionStatus = false;
-    public final static String ACTION_GATT_CONNECTED =
-            "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
-    public final static String ACTION_GATT_DISCONNECTED =
-            "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED";
     public final static String ACTION_GATT_SERVICES_DISCOVERED =
             "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE =
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
 
-    public SmartBandage(ScanRecord record,String bandageAddress) {
+    public SmartBandage(ScanRecord record, String bandageAddress) {
         this.bandageAddress = bandageAddress;
         this.bandageName = record.getDeviceName();
     }
 
-    public SmartBandage(BluetoothGatt gatt,boolean connStatus) {
-        this.bandageAddress = gatt.getDevice().getAddress();
-        this.bandageName = gatt.getDevice().getName();
-        this.bandageConnectionStatus = connStatus;
+    public SmartBandage(Context context, BluetoothDevice bleDevice) {
+        this.bandageAddress = bleDevice.getAddress();
+        this.bandageName = bleDevice.getName();
+        this.context = context;
+        this.selfRef = this;
+        SetBLEParams(context, bleDevice);
+    }
+
+    public void SetBLEParams(Context context, BluetoothDevice bleDevice) {
+        if (null != mBluetoothGatt) {
+            mBluetoothGatt.close();
+        }
+        mBluetoothGatt = bleDevice.connectGatt(context, true, this.mGattCallback);
     }
 
     public String getBandageName() {
@@ -89,72 +96,71 @@ public class SmartBandage implements Serializable{
         return this.bandageConnectionStatus;
     }
 
+    private Double[] parseTemp(byte[] data){
+        getCurrentReadings().Temperatures.clear();
+        currentReadings.parseTemperatureArray(data, 0);
 
-     float[] parseTemp(byte[] data){
-
-        //int count = 0;
-        float[] tempArray = new float[data.length/2];
-        double temp;
-        //double readingValue;
-        for (int i = 0; i < data.length/2; ++i) {
-           // count++;
-            temp = (((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.;
-            tempArray[i] = (float) temp;
-
-        }
-        //readingValue = sum/count;
-        return tempArray;
+        return currentReadings.Temperatures.toArray(new Double[] {});
     }
 
+    private Double[] parseHumidity(byte[] data){
+        getCurrentReadings().Humidities.clear();
+        currentReadings.parseHumidityArray(data, 0);
 
-      float[] parseHumidity(byte[] data){
-        double temp;
-        float[] tempArray = new float[data.length/2];
-        for (int i = 0; i < data.length/2; ++i) {
-            temp = (((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.;
-            tempArray[i] = (float) temp;
-        }
-        return tempArray;
+        return currentReadings.Humidities.toArray(new Double[]{});
     }
-    int parseID(byte[] data){
+    private int parseID(byte[] data){
+    return ReadingList.parse16BitLittleEndian(data, 0);
+    }
+    private int parseState(byte[] data){
         return ReadingList.parse16BitLittleEndian(data, 0);
     }
-    int parseState(byte[] data){
-        return ReadingList.parse16BitLittleEndian(data, 0);
+    private double parseBattery(byte[] data){
+    int count = 0;
+    double sum = 0;
+    double readingValue;
+    for (int i = 0; i < data.length/2; ++i) {
+        count++;
+        sum += (((0x0FF & data[2 * i + 1]) << 8 | (0x0FF & data[2 * i]))) / 16.;
     }
-     double parseBattery(byte[] data){
-        int count = 0;
-        double sum = 0;
-        double readingValue;
-        for (int i = 0; i < data.length/2; ++i) {
-            count++;
-            sum += (((0x0FF & data[2 * i + 1]) << 8 | (0x0FF & data[2 * i]))) / 16.;
+    readingValue = sum/count;
+    return readingValue;
+    }
+    private int parseExtPower(byte[] data){
+    return (0x0FF & data[0]);
+    }
+    private Double[] parseMoisture(byte[] data){
+        getCurrentReadings().Moistures.clear();
+        currentReadings.parseMoistureArray(data, 0);
+
+        return currentReadings.Moistures.toArray(new Double[] {});
+    }
+
+    private HistoricalReading getCurrentReadings() {
+        if (null == currentReadings) {
+            currentReadings = new HistoricalReading(0, 0);
         }
-        readingValue = sum/count;
-        return readingValue;
-    }
-     int parseExtPower(byte[] data){
-        return (0x0FF & data[0]);
-    }
-     float[] parseMoisture(byte[] data){
-        double temp;
-        float[] tempArray = new float[data.length/2];
-        for (int i = 0; i < data.length/2; ++i) {
 
-            temp = (((0x0FF & data[2*i+1]) << 8 | (0x0FF & data[2*i])))/16.;
-            tempArray[i] = (float) temp;
-        }
-
-        return tempArray;
-
+        return currentReadings;
     }
 
+    public ReadingList GetMoistures() {
+        return getCurrentReadings().Moistures;
+    }
+
+    public ReadingList GetTemperatures() {
+        return getCurrentReadings().Temperatures;
+    }
+
+    public ReadingList GetHumidities() {
+        return getCurrentReadings().Humidities;
+    }
 
     long parseSysTime(byte[] data){
         return ReadingList.parse32BitLittleEndian(data, 0);
     }
 
-    String parseReadingSize(byte[] data) {
+    private String parseReadingSize(byte[] data) {
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Reading Size: \n");
         for (int i = 0; i < data.length/2; ++i) {
@@ -164,7 +170,7 @@ public class SmartBandage implements Serializable{
         return stringBuilder.toString();
     }
 
-    String parseReadingCount(byte[] data) {
+    private String parseReadingCount(byte[] data) {
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("Number of Available Readings: \n");
         int value = 0;
@@ -176,7 +182,7 @@ public class SmartBandage implements Serializable{
         return stringBuilder.toString();
     }
 
-    ArrayList<HistoricalReading> parseReadings(Integer bandageId, byte[] data) {
+    private ArrayList<HistoricalReading> parseReadings(Integer bandageId, byte[] data) {
         ArrayList<HistoricalReading> returnList = new ArrayList<>();
         long referenceTime = ReadingList.parse32BitLittleEndian(data, 0);
 
@@ -215,12 +221,14 @@ public class SmartBandage implements Serializable{
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             if (newState == BluetoothProfile.STATE_CONNECTED) {
+                bandageConnectionStatus = true;
                 Log.i(TAG, "Connected to GATT server in service.");
                 // Attempts to discover services after successful connection.
                 Log.i(TAG, "Attempting to start service discovery:" +
                         gatt.discoverServices());
-                broadcastUpdate(ACTION_GATT_CONNECTED);
+                broadcastUpdate(CustomActions.ACTION_GATT_CONNECTED);
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+                bandageConnectionStatus = false;
                 Log.i(TAG, "Disconnected from GATT server in service.");
                 // Disable notificiations upon disconnect
 
@@ -232,7 +240,7 @@ public class SmartBandage implements Serializable{
                     }
                 }
 
-                broadcastUpdate(ACTION_GATT_DISCONNECTED);
+                broadcastUpdate(CustomActions.ACTION_GATT_DISCONNECTED);
             }
         }
 
@@ -257,8 +265,9 @@ public class SmartBandage implements Serializable{
 
                 BluetoothGattService service = mBluetoothGatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
                 bleReadQueue.clear();
+                bleReadQueue.add(service.getCharacteristic(SmartBandageGatt.UUID_READING_DATA_OFFSETS));
                 for ( BluetoothGattCharacteristic chara : service.getCharacteristics() ){
-                    if (chara.getUuid().equals(SmartBandageGatt.UUID_READINGS)) {
+                    if (chara.getUuid().equals(SmartBandageGatt.UUID_READINGS) || chara.getUuid().equals(SmartBandageGatt.UUID_READING_DATA_OFFSETS)) {
                         continue;
                     }
 
@@ -405,19 +414,21 @@ public class SmartBandage implements Serializable{
 
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
+        intent.putExtra(CustomActions.CURRENT_BANDAGE, getBandageAddress());
         context.sendBroadcast(intent);
     }
 
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
-        Log.i(TAG,"SAMPLE GATT ATTRIBUTE UUID: " + (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null)));
+
+        intent.putExtra(CustomActions.CURRENT_BANDAGE, getBandageAddress());
+
+        Log.i(TAG, "SAMPLE GATT ATTRIBUTE UUID: " + (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null)));
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Temperature Value") {
             final byte[] data = characteristic.getValue();
-            Log.i(TAG, "TEMP: " + characteristic.getValue().toString());
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
-            Log.i(TAG, "TEMP value to send: " + characteristic.getValue());
-            intent.putExtra("DATA_ARRAY", ArrayPasser.pack(parseTemp(characteristic.getValue())));
+            parseTemp(data);
             context.sendBroadcast(intent);
         }
 
@@ -426,7 +437,7 @@ public class SmartBandage implements Serializable{
             Log.i(TAG, "HUMIDITY: " + characteristic.getValue().toString());
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
-            intent.putExtra("DATA_ARRAY",ArrayPasser.pack(parseHumidity(characteristic.getValue())));
+            parseHumidity(data);
             context.sendBroadcast(intent);
         }
 
@@ -459,7 +470,7 @@ public class SmartBandage implements Serializable{
             Log.i(TAG, "HUMIDITY: " + characteristic.getValue().toString());
             intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             intent.setAction(CustomActions.MOISTURE_DATA_AVAILABLE);
-            intent.putExtra("DATA_ARRAY", ArrayPasser.pack(parseMoisture(characteristic.getValue())));
+            parseMoisture(data);
             context.sendBroadcast(intent);
         }
 
@@ -476,13 +487,7 @@ public class SmartBandage implements Serializable{
             intent.putExtra("EXTRA_DATA", readings);
             context.sendBroadcast(intent);
 
-            if (null != readings && readings.size() > 0) {
-                for (HistoricalReading reading: readings) {
-                    sendQueue.add(reading);
-                }
-            }
-
-            sendReadings();
+            sendData.queueData(readings);
         }
 
         if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Reading Size"){
@@ -502,22 +507,6 @@ public class SmartBandage implements Serializable{
             intent.putExtra("EXTRA_DATA", parseDataOffsets(characteristic.getValue()));
             broadcastQueue.add(intent);
         }
-    }
-
-
-
-    private void sendReadings() {
-        if (sendQueue.size() == 0) {
-            return;
-        }
-
-        if (null == sendData) {
-            sendData = new SendData();
-        }
-
-        List<HistoricalReading> readings = new ArrayList<>(Arrays.asList(sendQueue.toArray(new HistoricalReading[sendQueue.size()])));
-        sendQueue.removeAll(readings);
-        sendData.bulkInsertToDatabase(readings);
     }
 
     private static final UUID CONFIG_DESCRIPTOR = UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG);

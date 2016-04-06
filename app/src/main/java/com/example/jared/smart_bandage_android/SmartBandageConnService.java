@@ -25,21 +25,19 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.UUID;
 
 public class SmartBandageConnService extends Service {
     private static final String TAG = SmartBandageConnService.class.getSimpleName();
-    HashMap<String,SmartBandage> rememberedBandages;
-  //  public boolean readingsAvailable = false; //is set to true when there are historical readings available
+    private static HashMap<String,SmartBandage> rememberedBandages;
 
-
-   private SmartBandage smartBandage;
-
-    BluetoothAdapter bluetoothAdapter;
-    BluetoothGatt mBluetoothGatt;
+    private BluetoothAdapter bluetoothAdapter;
+    private static SmartBandageConnService service;
 
     public SmartBandageConnService() {
+        rememberedBandages = new HashMap<>();
     }
 
     @Override
@@ -50,12 +48,13 @@ public class SmartBandageConnService extends Service {
 
     @Override
     public void onCreate() {
+        service = this;
         super.onCreate();
         FileIO f = new FileIO();
-        String json = f.readFile(getFilesDir() +
-                FileIO.SAVE);
-        rememberedBandages = new HashMap<>();
-        rememberedBandages = f.gsonSmartBandageHashMapDeserializer(json);
+        String json = f.readFile(getFilesDir() + FileIO.SAVE);
+
+        HashMap<String, SmartBandage> deserializer = f.gsonSmartBandageHashMapDeserializer(json);
+
         Intent activityIntent = new Intent(this,MainActivity.class);
         activityIntent.setAction(CustomActions.MAIN_ACTION);
         activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -72,12 +71,27 @@ public class SmartBandageConnService extends Service {
         BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
 
+        for (String key: deserializer.keySet()) {
+            if (!rememberedBandages.containsKey(key)) {
+                rememberedBandages.put(key, null);
+            }
+        }
 
         for (String key : rememberedBandages.keySet()){
             Log.i(TAG,"Device " + key );
-            smartBandage = rememberedBandages.get(key);
-            mBluetoothGatt = bluetoothAdapter.getRemoteDevice(key).connectGatt(this, true, smartBandage.mGattCallback);
+            SmartBandage smartBandage = rememberedBandages.get(key);
+            if (null == smartBandage) {
+                smartBandage = new SmartBandage(this, bluetoothAdapter.getRemoteDevice(key));
+                rememberedBandages.put(key, smartBandage);
+            }
         }
+
+        broadcastUpdate(CustomActions.SERVICE_STARTED);
+    }
+
+    private void broadcastUpdate(final String action) {
+        final Intent intent = new Intent(action);
+        sendBroadcast(intent);
     }
 
     @Override
@@ -100,5 +114,40 @@ public class SmartBandageConnService extends Service {
         super.onDestroy();
     }
 
+    public static Map<String, SmartBandage> getBandages() {
+        if (null == rememberedBandages) {
+            rememberedBandages = new HashMap<>();
+        }
 
+        return rememberedBandages;
+    }
+
+    public static SmartBandage addDevice(String key) {
+        if (getBandages().containsKey(key)) {
+            return rememberedBandages.get(key);
+        }
+
+        if (null == service) {
+            rememberedBandages.put(key, null);
+            return null;
+        }
+
+        return service.addDeviceToInstance(key);
+    }
+
+    private SmartBandage addDeviceToInstance(String key) {
+        if (null == bluetoothAdapter) {
+            return null;
+        }
+
+        BluetoothDevice device = bluetoothAdapter.getRemoteDevice(key);
+        if (null == device) {
+            return null;
+        }
+
+        SmartBandage bandage = new SmartBandage(this, device);
+        rememberedBandages.put(key, bandage);
+
+        return bandage;
+    }
 }

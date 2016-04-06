@@ -54,11 +54,7 @@ public class ConnectedDevicesAdvancedActivity extends AppCompatActivity {
         deviceListview.setAdapter(connectionListAdapter);
         deviceListview.setOnItemClickListener(listviewListener);
 
-        for(String key : deviceList.keySet()){
-            Log.d(TAG, "Attempting Connection to Device " + key);
-            BluetoothDevice device =  bluetoothAdapter.getRemoteDevice(key);
-            device.connectGatt(this,true,mGattCallback);
-        }
+        connectionListAdapter.addAll(SmartBandageConnService.getBandages().values());
     }
     private AdapterView.OnItemClickListener listviewListener =  new AdapterView.OnItemClickListener() {
         @Override
@@ -66,7 +62,7 @@ public class ConnectedDevicesAdvancedActivity extends AppCompatActivity {
             SmartBandage sm = (SmartBandage)parent.getItemAtPosition(position);
             Log.d(TAG,"Item Selected:" + sm.getBandageName() + " " + sm.getBandageAddress());
             Intent i = new Intent(myself,DeviceServiceViewActivity.class);
-            i.putExtra(DeviceServiceViewActivity.BANDAGE, sm);
+            i.putExtra(CustomActions.CURRENT_BANDAGE, sm.getBandageAddress());
             startActivity(i);
         }
     };
@@ -76,19 +72,15 @@ public class ConnectedDevicesAdvancedActivity extends AppCompatActivity {
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             String intentAction;
             if (newState == BluetoothProfile.STATE_CONNECTED) {
-                SmartBandage sm = new SmartBandage(gatt,SmartBandage.CONNECTED);
                 Log.i(TAG, "Connected to GATT server.");
                 // Attempts to discover services after successful connection.
-                processResult(sm);
+                processResult(gatt);
                 Log.i(TAG, "Attempting to start service discovery:" +
                         gatt.discoverServices());
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 Log.i(TAG, "Disconnected from GATT server.");
-                SmartBandage sm = new SmartBandage(gatt,SmartBandage.DISCONNECTED);
-                processResult(sm);
-
-
+                processResult(gatt);
             }
         }
 
@@ -130,16 +122,16 @@ public class ConnectedDevicesAdvancedActivity extends AppCompatActivity {
                 convertView = LayoutInflater.from(getContext())
                         .inflate(R.layout.connection_status_layout, viewGroup, false);
             }
-            final SmartBandage smartBandage = getItem(position);
+            final SmartBandage sm = getItem(position);
 
             TextView deviceName = (TextView) convertView.findViewById(R.id.connectionName);
-            deviceName.setText(smartBandage.getBandageName());
+            deviceName.setText(sm.getBandageName());
 
             TextView deviceAddress = (TextView) convertView.findViewById(R.id.connectionAddress);
-            deviceAddress.setText(smartBandage.getBandageAddress());
+            deviceAddress.setText(sm.getBandageAddress());
 
             TextView deviceConnectionStatus = (TextView) convertView.findViewById(R.id.connectionStatus);
-            if (smartBandage.getBandageConnectionStatus()){
+            if (sm.getBandageConnectionStatus()) {
                 deviceConnectionStatus.setText("Connected");
                 //convertView.setBackgroundColor(getResources().getColor(android.R.color.holo_green_light,null));
             }
@@ -154,20 +146,17 @@ public class ConnectedDevicesAdvancedActivity extends AppCompatActivity {
 
     }
 
-    private void processResult(SmartBandage sm){
+    private void processResult(BluetoothGatt gatt){
         //Log.d(TAG,"New BLE Device:  " + result.getDevice().getName() + " @ " + result.getRssi());
 
-        msgHandler.sendMessage(Message.obtain(null, 0, sm));
+        msgHandler.sendMessage(Message.obtain(null, 0, gatt));
     }
     private Handler msgHandler = new Handler() {
         @Override
         public void handleMessage(Message msg){
-            SmartBandage smartBandage = (SmartBandage) msg.obj;
-            deviceConnectionStatus.put(smartBandage.getBandageAddress(), smartBandage);
-
-            connectionListAdapter.setNotifyOnChange(false);
-            connectionListAdapter.clear();
-            connectionListAdapter.addAll(deviceConnectionStatus.values());
+//            connectionListAdapter.setNotifyOnChange(false);
+//            connectionListAdapter.clear();
+//            connectionListAdapter.addAll(deviceConnectionStatus.values());
             connectionListAdapter.notifyDataSetChanged();
         }
     };

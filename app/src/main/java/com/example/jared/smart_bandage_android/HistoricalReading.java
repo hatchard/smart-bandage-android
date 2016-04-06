@@ -42,20 +42,11 @@ public class HistoricalReading implements Serializable {
 
         HistoricalReading reading = new HistoricalReading(referenceTime, timeDiff);
 
-        for (int i = 0; i < Offsets.TemperatureCount; ++i) {
-            int baseOffset = HistoricalReadingDataOffsets.TemperatureSize * i + Offsets.TemperatureOffset + offset;
-            reading.Temperatures.add(ReadingList.parse16BitLittleEndian(data, baseOffset) / 16.);
-        }
+        reading.parseTemperatureArray(data, offset + Offsets.TemperatureOffset);
 
-        for (int i = 0; i < Offsets.HumidityCount; ++i) {
-            int baseOffset = HistoricalReadingDataOffsets.HumiditySize * i + Offsets.HumidityOffset + offset;
-            reading.Humidities.add(ReadingList.parse16BitLittleEndian(data, baseOffset) / 16.);
-        }
+        reading.parseHumidityArray(data, offset + Offsets.HumidityOffset);
 
-        for (int i = 0; i < Offsets.MoistureCount; ++i) {
-            int baseOffset = HistoricalReadingDataOffsets.MoistureSize * i + Offsets.MoistureOffset + offset;
-            reading.Moistures.add(ReadingList.parse16BitLittleEndian(data, baseOffset) / 16.);
-        }
+        reading.parseMoistureArray(data, offset + Offsets.MoistureOffset);
 
         return reading;
     }
@@ -63,5 +54,38 @@ public class HistoricalReading implements Serializable {
     public HistoricalReading(long referenceTimestamp, long timeDiff) {
         ReadingTime = new Date();
         ReadingTime.setTime((referenceTimestamp + timeDiff) * 1000);
+    }
+
+    public void parseTemperatureArray(byte[] data, int offset) {
+        if (Offsets == null) {
+            return;
+        }
+
+        for (int i = 0; i < Offsets.TemperatureCount; ++i) {
+            int baseOffset = HistoricalReadingDataOffsets.TemperatureSize * i + offset;
+            Temperatures.add(ReadingList.parse16BitLittleEndian(data, baseOffset) / 16.);
+        }
+    }
+
+    public void parseMoistureArray(byte[] data, int offset) {
+        if (Offsets == null) {
+            return;
+        }
+
+        for (int i = 0; i < Offsets.MoistureCount; ++i) {
+            int baseOffset = HistoricalReadingDataOffsets.MoistureSize * i + offset;
+            Moistures.add(ReadingList.parse16BitLittleEndian(data, baseOffset) / 16.);
+        }
+    }
+
+    public void parseHumidityArray(byte[] data, int offset) {
+        if (Offsets == null) {
+            return;
+        }
+
+        for (int i = 0; i < Offsets.HumidityCount; ++i) {
+            int baseOffset = HistoricalReadingDataOffsets.HumiditySize * i + offset;
+            Humidities.add(ReadingList.parse16BitLittleEndian(data, baseOffset) / 16.);
+        }
     }
 }
