@@ -16,6 +16,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,6 +24,7 @@ import java.util.Map;
  */
 public class FileIO {
     public static final String SAVE = "rememberedDevices.json";
+    public static final String SAVE_HISTORICAL_DATA = "historicalData.json";
     private File getFile(String file_name) throws IOException {
         File f = new File(file_name);
         if (!f.exists()) {
@@ -33,6 +35,25 @@ public class FileIO {
     }
 
     public String readFile(String file_name) {
+        try {
+            File f = getFile(file_name);
+            BufferedReader buf = new BufferedReader(new FileReader(f));
+            String line = null;
+            StringBuilder stringBuilder = new StringBuilder();
+
+            while ( (line = buf.readLine()) != null){
+                stringBuilder.append(line);
+            }
+            buf.close();
+            return stringBuilder.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+    }
+
+    public String readHistoricalFile(String file_name) {
         try {
             File f = getFile(file_name);
             BufferedReader buf = new BufferedReader(new FileReader(f));
@@ -65,9 +86,40 @@ public class FileIO {
             return false;
         }
     }
+
+    public boolean writeHistoricalFile(String file_name,String content){
+        File f = null;
+        try {
+            f = getFile(file_name);
+            BufferedWriter buf = new BufferedWriter(new FileWriter(f,true));
+            buf.write(content + "\n");
+            buf.close();
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
     public String gsonSmartBandageHashMapSerializer (HashMap<String,SmartBandage> bandageHashMap) {
         Gson gson = new Gson();
         return gson.toJson(bandageHashMap);
+    }
+
+    public String gsonHistoricalSerializer(ArrayList<HistoricalReading> historicalReadings) {
+        Gson gson = new Gson();
+        return gson.toJson(historicalReadings);
+    }
+
+    public ArrayList<HistoricalReading> gsonHistoricalDeserializer (String serializedHistoricalData) {
+        Gson gson = new Gson();
+        ArrayList<HistoricalReading> historicalData = new ArrayList<>();
+        Type listType = new TypeToken<ArrayList<HistoricalReading>>() {}.getType();
+        if (serializedHistoricalData != null) {
+            historicalData = new Gson().fromJson(serializedHistoricalData, listType);
+        }
+
+        return historicalData;
     }
 
     //checks file system for the saved file, if there is no file or data in the file,

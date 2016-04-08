@@ -33,6 +33,10 @@ public class SampleGattAttributes {
     public static String SMART_BANDAGE_EXTERNAL_POWER = "0000f0f6-0000-1000-8000-00805f9b34fb";
     public static String SMART_BANDAGE_MOISTURE_MAP = "0000f0f7-0000-1000-8000-00805f9b34fb";
     public static String SMART_BANDAGE_SYS_TIME = "0000f0f8-0000-1000-8000-00805f9b34fb";
+    public static String SMART_BANDAGE_READINGS = "0000f0f9-0000-1000-8000-00805f9b34fb";
+    public static String SMART_BANDAGE_READING_SIZE = "0000f0fa-0000-1000-8000-00805f9b34fb";
+    public static String SMART_BANDAGE_READING_COUNT = "0000f0fb-0000-1000-8000-00805f9b34fb";
+    public static String SMART_BANDAGE_DATA_OFFSETS = "0000f0fc-0000-1000-8000-00805f9b34fb";
 
 
     static {
@@ -48,6 +52,13 @@ public class SampleGattAttributes {
         attributes.put("0000f0f6-0000-1000-8000-00805f9b34fb", "External Power");
         attributes.put("0000f0f7-0000-1000-8000-00805f9b34fb", "Moisture Map");
         attributes.put("0000f0f8-0000-1000-8000-00805f9b34fb", "System Time");
+
+
+        //TODO need to confirm correct Bandage Characteristic UUIDs for the below,
+        attributes.put("0000f0f9-0000-1000-8000-00805f9b34fb", "Readings");
+        attributes.put("0000f0fa-0000-1000-8000-00805f9b34fb", "Reading Size");
+        attributes.put("0000f0fb-0000-1000-8000-00805f9b34fb", "Reading Count");
+        attributes.put("0000f0fc-0000-1000-8000-00805f9b34fb", "Data Offsets");
 
         // Define the UUIDs of the characteristics for your bluetooth device
     }

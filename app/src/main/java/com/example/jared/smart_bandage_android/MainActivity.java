@@ -9,8 +9,10 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
@@ -34,6 +36,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -49,9 +52,13 @@ public class MainActivity extends AppCompatActivity {
     Button scanBtn;
     private static final int SCAN_PERIOD = 10000;
     private Activity myself = this;
+    private ConnectedDevicesActivity connectedDevicesActivity;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+
         setContentView(R.layout.activity_main);
         lv = (ListView) findViewById(R.id.deviceListView);
         smartBandageAdapter = new SmartBandageAdapter(this);
@@ -73,7 +80,6 @@ public class MainActivity extends AppCompatActivity {
                 } else {
                     Log.d(TAG, "Device No longer Scanning");
                     final Intent intent = new Intent(myself, ConnectedDevicesActivity.class);
-                    intent.putExtra(ConnectedDevicesActivity.DEVICE_LIST, rememberedSmartBandages);
                     startActivity(intent);
                 }
             }
@@ -82,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
         stopBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(MainActivity.this,SmartBandageConnService.class);
+                Intent i = new Intent(MainActivity.this, SmartBandageConnService.class);
                 i.setAction(CustomActions.STOP_FOREGROUND_SERVICE);
                 startService(i);
             }
@@ -99,6 +105,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume(){
         super.onResume();
+        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
         //App compat code, API 23+ requires runtime permission check
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_COARSE_LOCATION)
@@ -140,14 +147,17 @@ public class MainActivity extends AppCompatActivity {
         startService(startIntent);
         String json = fileIO.readFile(getFilesDir() +
                 FileIO.SAVE);
-        rememberedSmartBandages = new HashMap<String,SmartBandage>();
+
         rememberedSmartBandages = fileIO.gsonSmartBandageHashMapDeserializer(json);
+
         myBandages.putAll(rememberedSmartBandages);
         smartBandageAdapter.setNotifyOnChange(false);
         smartBandageAdapter.addRememberedBandages(false);
         smartBandageAdapter.clear();
         smartBandageAdapter.addAll(myBandages.values());
         smartBandageAdapter.notifyDataSetChanged();
+
+
     }
     @Override
      protected void onStop() {
@@ -162,6 +172,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
+        unregisterReceiver(mGattUpdateReceiver);
         Log.d(TAG, "Writing File to Storage On Pause");
         fileIO.writeFile(getFilesDir() + FileIO.SAVE,
                 false,
@@ -287,4 +298,27 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
+
+    private static IntentFilter makeGattUpdateIntentFilter() {
+        final IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(CustomActions.SERVICE_STARTED);
+
+        return intentFilter;
+    }
+
+    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            final String action = intent.getAction();
+
+            if (CustomActions.SERVICE_STARTED.equals(action)) {
+                Map<String, SmartBandage> deviceList = SmartBandageConnService.getBandages();
+                for (String key: rememberedSmartBandages.keySet()) {
+                    if (!deviceList.containsKey(key)) {
+                        SmartBandageConnService.addDevice(key);
+                    }
+                }
+            }
+        }
+    };
 }

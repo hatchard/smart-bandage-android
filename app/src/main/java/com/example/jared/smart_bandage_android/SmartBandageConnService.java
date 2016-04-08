@@ -12,21 +12,32 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
+import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.UUID;
 
 public class SmartBandageConnService extends Service {
     private static final String TAG = SmartBandageConnService.class.getSimpleName();
-    private static final String EXTRA_DATA = "EXTRA_DATA";
-    HashMap<String,SmartBandage> rememberedBandages;
-    BluetoothAdapter bluetoothAdapter;
+    private static HashMap<String,SmartBandage> rememberedBandages;
+
+    private BluetoothAdapter bluetoothAdapter;
+    private static SmartBandageConnService service;
+
     public SmartBandageConnService() {
+        rememberedBandages = new HashMap<>();
     }
 
     @Override
@@ -37,12 +48,13 @@ public class SmartBandageConnService extends Service {
 
     @Override
     public void onCreate() {
+        service = this;
         super.onCreate();
         FileIO f = new FileIO();
-        String json = f.readFile(getFilesDir() +
-                FileIO.SAVE);
-        rememberedBandages = new HashMap<>();
-        rememberedBandages = f.gsonSmartBandageHashMapDeserializer(json);
+        String json = f.readFile(getFilesDir() + FileIO.SAVE);
+
+        HashMap<String, SmartBandage> deserializer = f.gsonSmartBandageHashMapDeserializer(json);
+
         Intent activityIntent = new Intent(this,MainActivity.class);
         activityIntent.setAction(CustomActions.MAIN_ACTION);
         activityIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -56,13 +68,30 @@ public class SmartBandageConnService extends Service {
                 .setOngoing(true);
         Notification notification = nBuilder.build();
         startForeground(CustomActions.FOREGROUND_SERVICE_ID, notification);
-        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(BLUETOOTH_SERVICE);
+        BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
         bluetoothAdapter = bluetoothManager.getAdapter();
+
+        for (String key: deserializer.keySet()) {
+            if (!rememberedBandages.containsKey(key)) {
+                rememberedBandages.put(key, null);
+            }
+        }
+
         for (String key : rememberedBandages.keySet()){
             Log.i(TAG,"Device " + key );
-            BluetoothDevice device =  bluetoothAdapter.getRemoteDevice(key);
-            device.connectGatt(this, true, mGattCallback);
+            SmartBandage smartBandage = rememberedBandages.get(key);
+            if (null == smartBandage) {
+                smartBandage = new SmartBandage(this, bluetoothAdapter.getRemoteDevice(key));
+                rememberedBandages.put(key, smartBandage);
+            }
         }
+
+        broadcastUpdate(CustomActions.SERVICE_STARTED);
+    }
+
+    private void broadcastUpdate(final String action) {
+        final Intent intent = new Intent(action);
+        sendBroadcast(intent);
     }
 
     @Override
@@ -85,100 +114,40 @@ public class SmartBandageConnService extends Service {
         super.onDestroy();
     }
 
-    private BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
-        @Override
-        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
-                Log.i(TAG, "Connected to GATT server.");
-                // Attempts to discover services after successful connection.
-                Log.i(TAG, "Attempting to start service discovery:" +
-                        gatt.discoverServices());
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
-                Log.i(TAG, "Disconnected from GATT server.");
-
-            }
+    public static Map<String, SmartBandage> getBandages() {
+        if (null == rememberedBandages) {
+            rememberedBandages = new HashMap<>();
         }
 
-        @Override
-        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.i(TAG, "Services Discovered YAAY");
+        return rememberedBandages;
+    }
 
-                BluetoothGattService service = gatt.getService(UUID.fromString(SampleGattAttributes.SMART_BANDAGE_SERVICE));
-                List<BluetoothGattCharacteristic> charas = service.getCharacteristics();
-                for ( BluetoothGattCharacteristic chara : charas){
-                    Log.i(TAG, SampleGattAttributes.lookup(chara.getUuid().toString(), "UNKNOWN"));
-                    gatt.setCharacteristicNotification(chara, true);
-                    List<BluetoothGattDescriptor> descriptors = chara.getDescriptors();
-                    for (BluetoothGattDescriptor descriptor : descriptors) {
-                        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                        gatt.writeDescriptor(descriptor);
-                    }
-                }
-
-            } else {
-                Log.w(TAG, "onServicesDiscovered received: " + status);
-            }
+    public static SmartBandage addDevice(String key) {
+        if (getBandages().containsKey(key)) {
+            return rememberedBandages.get(key);
         }
 
-        @Override
-        public void onCharacteristicRead(BluetoothGatt gatt,
-                                         BluetoothGattCharacteristic characteristic,
-                                         int status) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.i(TAG, "Read Characteristic");
-                broadcastUpdate(characteristic);
-            }
+        if (null == service) {
+            rememberedBandages.put(key, null);
+            return null;
         }
 
-        @Override
-        public void onCharacteristicChanged(BluetoothGatt gatt,
-                                            BluetoothGattCharacteristic characteristic) {
-            Log.i(TAG,"Characteristic Changed");
-            //Here is where broadcasts will be sent containing information when characteristic is updated
-            broadcastUpdate(characteristic);
+        return service.addDeviceToInstance(key);
+    }
+
+    private SmartBandage addDeviceToInstance(String key) {
+        if (null == bluetoothAdapter) {
+            return null;
         }
-    };
 
-    private void broadcastUpdate(final BluetoothGattCharacteristic characteristic) {
-        final Intent intent = new Intent();
-
-        if (SampleGattAttributes.SMART_BANDAGE_TEMP.equals(characteristic.getUuid())) {
-            Log.i(TAG,"TEMP: " + characteristic.getValue().toString());
-            intent.setAction(CustomActions.BANDAGE_TEMP_AVAILABLE);
-            intent.putExtra("EXTRA_DATA",SmartBandage.parseTemp(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_HUMIDITY.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.BANDAGE_HUMIDITY_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseHumidity(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_ID.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.BANDAGE_ID_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseID(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_STATE.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.BANDAGE_STATE_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseState(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_BATTERY_CHRG.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.BANDAGE_BATT_CHRG_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseBattery(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_EXTERNAL_POWER.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.EXT_POWER_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseExtPower(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_MOISTURE_MAP.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.MOISTURE_DATA_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseMoisture(characteristic));
-
-        } else if (SampleGattAttributes.SMART_BANDAGE_SYS_TIME.equals(characteristic.getUuid())){
-            intent.setAction(CustomActions.SYS_TIME_DATA_AVAILABLE);
-            intent.putExtra("EXTRA_DATA", SmartBandage.parseSysTime(characteristic));
-
-        } else {
-
+        BluetoothDevice device = bluetoothAdapter.getRemoteDevice(key);
+        if (null == device) {
+            return null;
         }
-        sendBroadcast(intent);
+
+        SmartBandage bandage = new SmartBandage(this, device);
+        rememberedBandages.put(key, bandage);
+
+        return bandage;
     }
 }
