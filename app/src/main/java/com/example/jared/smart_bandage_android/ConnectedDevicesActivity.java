@@ -39,9 +39,11 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
         setContentView(R.layout.activity_connected_devices);
         HashMap<String, SmartBandage> importList = (HashMap<String,SmartBandage>) getIntent().getSerializableExtra(DEVICE_LIST);
         deviceList = SmartBandageConnService.getBandages();
-        for (String key: importList.keySet()) {
-            if (!deviceList.containsKey(key)) {
-                SmartBandageConnService.addDevice(key);
+        if (null != importList) {
+            for (String key : importList.keySet()) {
+                if (!deviceList.containsKey(key)) {
+                    SmartBandageConnService.addDevice(key);
+                }
             }
         }
 
@@ -107,6 +109,7 @@ public class ConnectedDevicesActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        connectionListAdapter.notifyDataSetChanged();
         registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
     }
 

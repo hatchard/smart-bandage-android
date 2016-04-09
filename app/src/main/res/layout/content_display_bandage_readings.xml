@@ -17,6 +17,14 @@
         android:textStyle="bold"
         android:text="Bandage Readings" />
 
+    <TextView
+        android:id="@+id/statusTextView"
+        android:layout_width="222dp"
+        android:layout_height="60dp"
+        android:textSize="15sp"
+        android:textStyle="normal"
+        android:text="Status: " />
+
     <ListView
         android:id="@+id/listView"
         android:layout_width="fill_parent"

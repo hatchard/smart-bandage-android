@@ -16,8 +16,8 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 import java.util.HashMap;
+import android.widget.TextView;
 
 /**
  * Created by Me on 2016-03-22.
