@@ -6,13 +6,13 @@ import java.util.Date;
 /**
  * Created by michaelblouin on 3/30/2016.
  */
+
 public class HistoricalReading implements Serializable {
     public static HistoricalReadingDataOffsets Offsets = null;
     public static class HistoricalReadingDataOffsets implements Serializable {
         public static final int TemperatureSize = 2;
         public static final int HumiditySize = 2;
         public static final int MoistureSize = 2;
-        public static final int TimeDiffSize = 2;
         public static final int RefTimeSize = 4;
 
         public int TemperatureOffset;
@@ -41,13 +41,9 @@ public class HistoricalReading implements Serializable {
         }
 
         HistoricalReading reading = new HistoricalReading(referenceTime, timeDiff);
-
         reading.parseTemperatureArray(data, offset + Offsets.TemperatureOffset);
-
         reading.parseHumidityArray(data, offset + Offsets.HumidityOffset);
-
         reading.parseMoistureArray(data, offset + Offsets.MoistureOffset);
-
         return reading;
     }
 
@@ -60,7 +56,6 @@ public class HistoricalReading implements Serializable {
         if (Offsets == null) {
             return;
         }
-
         for (int i = 0; i < Offsets.TemperatureCount; ++i) {
             int baseOffset = HistoricalReadingDataOffsets.TemperatureSize * i + offset;
             Temperatures.add(ReadingList.parse16BitLittleEndian(data, baseOffset) / 16.);
@@ -71,7 +66,6 @@ public class HistoricalReading implements Serializable {
         if (Offsets == null) {
             return;
         }
-
         for (int i = 0; i < Offsets.MoistureCount; ++i) {
             int baseOffset = HistoricalReadingDataOffsets.MoistureSize * i + offset;
             Moistures.add(ReadingList.parse16BitLittleEndian(data, baseOffset) / 16.);
@@ -82,7 +76,6 @@ public class HistoricalReading implements Serializable {
         if (Offsets == null) {
             return;
         }
-
         for (int i = 0; i < Offsets.HumidityCount; ++i) {
             int baseOffset = HistoricalReadingDataOffsets.HumiditySize * i + offset;
             Humidities.add(ReadingList.parse16BitLittleEndian(data, baseOffset) / 16.);

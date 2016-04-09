@@ -1,47 +1,32 @@
 package com.example.jared.smart_bandage_android;
 
-
-        import android.content.BroadcastReceiver;
-        import android.content.Context;
-        import android.content.Intent;
-        import android.content.IntentFilter;
-        import android.net.ConnectivityManager;
-        import android.net.NetworkInfo;
-        import android.os.Bundle;
-        import android.support.v7.app.AppCompatActivity;
-        import android.util.Log;
-        import android.view.Menu;
-        import android.view.MenuInflater;
-        import android.view.MenuItem;
-        import android.widget.ListView;
-        import java.text.DecimalFormat;
-        import java.util.ArrayList;
-        import java.util.HashMap;
-        import java.util.Map;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.widget.ListView;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Map;
 
 
 public class DisplayBandageReadingsActivity extends AppCompatActivity {
     private static final String TAG = DisplayBandageReadingsActivity.class.getSimpleName();
-    //probably not the best way to do this
+
     Context context;
-    SendData sendData;
-    String tempData;
-    String humidityData;
-    String moistureData;
-    FileIO fileIO = new FileIO();
     String bandageAddr;
     DisplayModel displayModelTemperature = DisplayModels.getInstance().getTemperatureDM();
     DisplayModel displayModelHumidity = DisplayModels.getInstance().getHumidityDM();
     DisplayModel displayModelMoisture = DisplayModels.getInstance().getMoistureDM();
     DecimalFormat format = new DecimalFormat("#.#");
-
-    //EditText bandageID = (EditText) findViewById(R.id.bandageID);
-   // String bandageID = "1234";
-    public static String DEVICE_LIST ="deviceList";
     public static Map<String,SmartBandage> deviceList;
     private SmartBandage bandage;
-
-   // public final static float[] dataValue = "DATA_VALUE";
 
     public final static String ACTION_GATT_CONNECTED =
             "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
@@ -58,16 +43,10 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_display_bandage_readings);
         context = this;
-        //android.os.Debug.waitForDebugger();
         deviceList = SmartBandageConnService.getBandages();
         bandageAddr = (String) getIntent().getSerializableExtra(CustomActions.CURRENT_BANDAGE);
         bandage = deviceList.get(bandageAddr);
-
         updateActivity();
-
-       // sendData = new SendData();
-       // sendData.insert();
-
     }
 
     @Override
@@ -89,12 +68,8 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
         unregisterReceiver(mGattUpdateReceiver);
     }
 
-
-    // Couldn't get this working in the onClick
-    // TODO look into it
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
         switch (item.getItemId()) {
             case R.id.new_connection:
                 viewNewConnection();
@@ -155,76 +130,16 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
                 String values = intent.getStringExtra("EXTRA_DATA");
                 Log.i (TAG, "reading size" + values);
             }
-//
-//            if (CustomActions.SMART_BANDAGE_READINGS_AVAILABLE.equals(action)) {
-//                ArrayList<HistoricalReading> readings = (ArrayList<HistoricalReading>) intent.getSerializableExtra("EXTRA_DATA");
-//                ArrayList<HistoricalReading> fileReadings = new ArrayList<>();
-//
-//                if (null == readings) {
-//                    return;
-//                }
-//
-//                if(isOnline(context)) {
-//                    String json = fileIO.readFile(getFilesDir() +
-//                            FileIO.SAVE_HISTORICAL_DATA);
-//                    fileReadings = fileIO.gsonHistoricalDeserializer(json);
-//
-//                    for (HistoricalReading reading: readings) {
-//                        if (null == reading) {
-//                            continue;
-//                        }
-//
-//                        sendParsedData(reading);
-//                    }
-//                    if (fileReadings != null) {
-//                        for (HistoricalReading savedReading : fileReadings) {
-//                            if (null == savedReading) {
-//                                continue;
-//                            }
-//
-//                            sendParsedData(savedReading);
-//                        }
-//                    }
-//                } else {
-//                    Log.d(TAG, "no internet connection, saving data");
-//                    fileIO.writeFile(getFilesDir() + FileIO.SAVE_HISTORICAL_DATA,
-//                            false,
-//                            fileIO.gsonHistoricalSerializer(readings));
-//                }
-//            }
 
             updateActivity();
         }
     };
 
     public void updateActivity(){
-        // 1. pass context and data to the custom adapter
         BandageReadingAdapter adapter = new BandageReadingAdapter(this, generateData());
-
-        // if extending Activity 2. Get ListView from activity_main.xml
         ListView listView = (ListView) findViewById(R.id.listView);
-
-        // 3. setListAdapter
         listView.setAdapter(adapter);// if extending Activity
-//        listView.invalidate();
-//        listView.invalidateViews();
-//        BandageReadingAdapter adapter = (BandageReadingAdapter) listView.getAdapter();
-
-//        if (null != adapter) {
-//            adapter.notifyDataSetChanged();
-//        }
-        // setListAdapter(adapter);
     }
-
-/*
-    private ArrayList<DisplayModel> generateData(){
-        ArrayList<DisplayModel> models = new ArrayList<DisplayModel>();
-        models.add(new DisplayModel(R.drawable.thermometer,"Temperature: ", getTempData()));
-        models.add(new DisplayModel(R.drawable.cloud,"Humidity: ", getHumidityData()));
-        models.add(new DisplayModel(R.drawable.raindrop, "Moisture: ", getMoistureData()));
-
-        return models;
-    }*/
 
     private ArrayList<DisplayModel> generateData() {
         ArrayList<DisplayModel> models = new ArrayList<DisplayModel>();
@@ -259,18 +174,13 @@ public class DisplayBandageReadingsActivity extends AppCompatActivity {
 
 
     public void viewAdvancedView(){
-        Log.w("why", "about to go to DeviceServiceViewActivity");
         Intent intent = new Intent(this, ConnectedDevicesAdvancedActivity.class);
-//        intent.putExtra(ConnectedDevicesAdvancedActivity.DEVICE_LIST, deviceList);
-        // Intent intent = new Intent(this, DeviceServiceViewActivity.class);
         startActivity(intent);
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {
         final IntentFilter intentFilter = new IntentFilter();
-        // intentFilter.addAction(ACTION_GATT_CONNECTED);
-        // intentFilter.addAction(ACTION_GATT_DISCONNECTED);
-        //intentFilter.addAction(ACTION_GATT_SERVICES_DISCOVERED);
+
         intentFilter.addAction(ACTION_DATA_AVAILABLE);
         intentFilter.addAction(CustomActions.ACTION_GATT_CONNECTED);
         intentFilter.addAction(CustomActions.ACTION_GATT_DISCONNECTED);

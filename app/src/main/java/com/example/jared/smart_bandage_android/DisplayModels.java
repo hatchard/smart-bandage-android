@@ -21,24 +21,13 @@ public class DisplayModels {
         return temperatureDM;
     }
 
-    public void setTemperatureDM(DisplayModel temperatureDM) {
-        this.temperatureDM = temperatureDM;
-    }
-
     public DisplayModel getHumidityDM() {
         return humidityDM;
-    }
-
-    public void setHumidityDM(DisplayModel humidityDM) {
-        this.humidityDM = humidityDM;
     }
 
     public DisplayModel getMoistureDM() {
         return moistureDM;
     }
 
-    public void setMoistureDM(DisplayModel moistureDM) {
-        this.moistureDM = moistureDM;
-    }
 
 }

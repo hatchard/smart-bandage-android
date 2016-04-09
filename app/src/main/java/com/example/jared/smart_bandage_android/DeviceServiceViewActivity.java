@@ -22,7 +22,6 @@ import android.widget.ExpandableListView;
 import android.widget.SimpleExpandableListAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,8 +29,8 @@ import java.util.UUID;
 
 public class DeviceServiceViewActivity extends AppCompatActivity {
     private final static String TAG = DeviceServiceViewActivity.class.getSimpleName();
-    public final static String BANDAGE = "BANDAGE";
 
+    public final static String BANDAGE = "BANDAGE";
     public final static String ACTION_GATT_CONNECTED =
             "com.example.bluetooth.le.ACTION_GATT_CONNECTED";
     public final static String ACTION_GATT_DISCONNECTED =
@@ -44,23 +43,23 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
             "com.example.bluetooth.le.EXTRA_DATA";
     public final static String BANDAGE_TEMP_AVAILABLE =
             "com.example.bluetooth.le.BANDAGE_TEMP_AVAILABLE";
-    public static final String BANDAGE_HUMIDITY_AVAILABLE = "com.example.smart_bandage_android.BANDAGE_HUMIDITY_AVAILABLE";
-    public static final String MOISTURE_DATA_AVAILABLE = "com.example.smart_bandage_android.MOISTURE_DATA_AVAILABLE";
+    public static final String BANDAGE_HUMIDITY_AVAILABLE =
+            "com.example.smart_bandage_android.BANDAGE_HUMIDITY_AVAILABLE";
+
     private static final ParcelUuid UUID_HEART_RATE_MEASUREMENT = SmartBandage.BANDAGE_SERVICE;
-    private Activity myself = this;
     private BluetoothAdapter bluetoothAdapter;
     ExpandableListView serviceListView;
+
     private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
             new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
-    private BluetoothGattCharacteristic mNotifyCharacteristic;
 
     private final String LIST_NAME = "NAME";
     private final String LIST_UUID = "UUID";
 
     private boolean doSingleWrite = false;
     private SmartBandage smartBandage;
-
     BluetoothGatt mBluetoothGatt;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,18 +76,11 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
         mBluetoothGatt = bluetoothAdapter.getRemoteDevice(smartBandage.getBandageAddress()).connectGatt(this, true, myCallback);
     }
 
-    protected void connectGatt() {
-       mBluetoothGatt = bluetoothAdapter.getRemoteDevice(smartBandage.getBandageAddress()).connectGatt(this, true, myCallback);
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
         registerReceiver(mGattUpdateReceiver,makeGattUpdateIntentFilter());
     }
-
-    // Implements callback methods for GATT events that the app cares about.  For example,
-    // connection change and services discovered.
 
     private final BluetoothGattCallback myCallback = new BluetoothGattCallback() {
         int tries = 0;
@@ -100,23 +92,17 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
                 intentAction = ACTION_GATT_CONNECTED;
                 broadcastUpdate(intentAction);
                 Log.i(TAG, "Connected to GATT server.");
-                // Attempts to discover services after successful connection.
                 Log.i(TAG, "Attempting to start service discovery:" +
                         mBluetoothGatt.discoverServices());
 
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 gatt.setCharacteristicNotification(gatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE).getCharacteristic(SmartBandageGatt.UUID_READINGS), false);
-
                 intentAction = ACTION_GATT_DISCONNECTED;
                 Log.i(TAG, "Disconnected from GATT server.");
                 broadcastUpdate(intentAction);
-
-                // Try again
-//                if (tries++ <= 3) {
-//                    connectGatt();
-//                }
             }
         }
+
         @Override
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -157,12 +143,6 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
                                           BluetoothGattCharacteristic characteristic, int status) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 System.out.println("BLE write succeeded");
-                // Re-read
-//                if (mBluetoothGatt.readCharacteristic(mGattCharacteristics.get(2).get(8))) {
-//                    System.out.println("Secondary read started...");
-//                } else {
-//                    System.err.println("Secondary write failed...");
-//                }
             } else {
                 System.err.println("BLE write failed");
             }
@@ -214,6 +194,7 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
             }
         }
     };
+
     private void broadcastUpdate(final String action) {
         final Intent intent = new Intent(action);
         sendBroadcast(intent);
@@ -287,26 +268,9 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
             stringBuilder.append(value);
             stringBuilder.append("\n");
             intent.putExtra(EXTRA_DATA, stringBuilder.toString());
+
         } else if (SampleGattAttributes.lookup(characteristic.getUuid().toString(), null) == "Readings") {
             final byte[] data = characteristic.getValue();
-
-            int value = 0;
-//            for (int i = 0; i < (data.length)/22; ++i) {
-//                final StringBuilder stringBuilder = new StringBuilder();
-//                stringBuilder.append("Reading ");
-//                stringBuilder.append(i);
-//                stringBuilder.append("  ");
-//
-//                for (int j = 0; j < 9; ++j) {
-//                    stringBuilder.append((((0x0FF & data[2*j+1 + i*22]) << 8 | (0x0FF & data[2*j + i*22])))/16.);
-//                    stringBuilder.append("  ");
-//                }
-//
-//                stringBuilder.append("Time: ");
-//                stringBuilder.append((((0x0FF & data[i*22 + 21]) << 8 | (0x0FF & data[i*22 + 20]))));
-//                System.out.println(stringBuilder.toString());
-//            }
-
             if (doSingleWrite && data != null && data.length > 0) {
                 doSingleWrite = false;
                 final BluetoothGattCharacteristic writeChar =
@@ -344,7 +308,6 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
         sendBroadcast(intent);
     }
 
-
     // Demonstrates how to iterate through the supported GATT Services/Characteristics.
     // In this sample, we populate the data structure that is bound to the ExpandableListView
     // on the UI.
@@ -356,7 +319,7 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
         ArrayList<HashMap<String, String>> gattServiceData = new ArrayList<HashMap<String, String>>();
         ArrayList<ArrayList<HashMap<String, String>>> gattCharacteristicData
                 = new ArrayList<ArrayList<HashMap<String, String>>>();
-        mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
+        mGattCharacteristics = new ArrayList<>();
 
         // Loops through available GATT Services.
         for (BluetoothGattService gattService : gattServices) {
@@ -421,28 +384,15 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
                         final int charaProp = characteristic.getProperties();
 
                         if ((charaProp & BluetoothGattCharacteristic.PROPERTY_READ) > 0) {
-                            // If there is an active notification on a characteristic, clear
-                            // it first so it doesn't update the data field on the user interface.
-//                            if (mNotifyCharacteristic != null) {
-//                                mBluetoothGatt.setCharacteristicNotification(
-//                                        mNotifyCharacteristic, false);
-//                                mNotifyCharacteristic = null;
-//                            }
                             mBluetoothGatt.readCharacteristic(characteristic);
                         } else {
                             System.err.println("Read characteristic does not support notifications");
                         }
-
                         return true;
                     }
                     return false;
                 }
             };
-
-    private boolean ReadReadingsCharacteristic() {
-        doSingleWrite = true;
-        return mBluetoothGatt.readCharacteristic(mBluetoothGatt.getService(SmartBandageGatt.UUID_SMART_BANDAGE_SERVICE).getCharacteristic(SmartBandageGatt.UUID_READINGS));
-    }
 
     private boolean SetEnableCharacteristicNotifications(BluetoothGattCharacteristic characteristic, boolean enable) {
         if (enable) {
@@ -450,8 +400,6 @@ public class DeviceServiceViewActivity extends AppCompatActivity {
         } else {
             System.out.println("Disabling notifications for characteristic " + characteristic.getUuid().toString());
         }
-
-//        mNotifyCharacteristic = characteristic;
         mBluetoothGatt.setCharacteristicNotification(characteristic, true);
 
         final BluetoothGattDescriptor desc = characteristic.getDescriptor(CONFIG_DESCRIPTOR);

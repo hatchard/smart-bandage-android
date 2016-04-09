@@ -16,7 +16,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Parcel;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -32,7 +31,6 @@ import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +38,7 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+
     private static final int PERMISSION_REQUEST_COARSE_LOCATION = 1;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothLeScanner bluetoothLeScanner;
@@ -52,12 +51,10 @@ public class MainActivity extends AppCompatActivity {
     Button scanBtn;
     private static final int SCAN_PERIOD = 10000;
     private Activity myself = this;
-    private ConnectedDevicesActivity connectedDevicesActivity;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-
 
         setContentView(R.layout.activity_main);
         lv = (ListView) findViewById(R.id.deviceListView);
@@ -99,7 +96,7 @@ public class MainActivity extends AppCompatActivity {
         bluetoothAdapter = bluetoothManager.getAdapter();
         bluetoothLeScanner = bluetoothAdapter.getBluetoothLeScanner();
 
-        myBandages = new HashMap<String,SmartBandage>();
+        myBandages = new HashMap<>();
         fileIO = new FileIO();
     }
 
@@ -157,9 +154,8 @@ public class MainActivity extends AppCompatActivity {
         smartBandageAdapter.clear();
         smartBandageAdapter.addAll(myBandages.values());
         smartBandageAdapter.notifyDataSetChanged();
-
-
     }
+
     @Override
      protected void onStop() {
         super.onStop();
@@ -193,7 +189,6 @@ public class MainActivity extends AppCompatActivity {
                 .setScanMode(ScanSettings.SCAN_MODE_BALANCED)
                 .build();
 
-
             bluetoothLeScanner.startScan(filters, settings, scanCallback);
             scanHandler.postDelayed(new Runnable() {
                 @Override
@@ -205,7 +200,6 @@ public class MainActivity extends AppCompatActivity {
         }
 
     }
-
 
     private ScanCallback scanCallback = new ScanCallback() {
         @Override
@@ -229,8 +223,6 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private void processResult(ScanResult result){
-        //Log.d(TAG,"New BLE Device:  " + result.getDevice().getName() + " @ " + result.getRssi());
-
         SmartBandage smartBandage = new SmartBandage(result.getScanRecord(),
                 result.getDevice().getAddress());
         msgHandler.sendMessage(Message.obtain(null,0,smartBandage));
@@ -251,7 +243,6 @@ public class MainActivity extends AppCompatActivity {
     };
 
     private class SmartBandageAdapter extends ArrayAdapter<SmartBandage> {
-
         public SmartBandageAdapter(Context context) {
             super(context, 0);
         }
@@ -261,7 +252,6 @@ public class MainActivity extends AppCompatActivity {
         }
         @Override
         public View getView(int position, View convertView, ViewGroup viewGroup){
-
             if (convertView == null) {
                 convertView = LayoutInflater.from(getContext())
                         .inflate(R.layout.device_layout, viewGroup, false);
@@ -297,7 +287,6 @@ public class MainActivity extends AppCompatActivity {
             });
             return convertView;
         }
-
     }
 
     private static IntentFilter makeGattUpdateIntentFilter() {

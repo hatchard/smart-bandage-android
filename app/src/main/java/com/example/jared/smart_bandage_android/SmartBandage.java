@@ -1,44 +1,33 @@
 package com.example.jared.smart_bandage_android;
 
-import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
-import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.le.ScanRecord;
 import android.content.Intent;
 import android.os.ParcelUuid;
-
-import android.support.annotation.RequiresPermission;
 import android.util.Log;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Queue;
 import java.util.UUID;
-
 import android.content.Context;
-
 
 /**
  * Created by Jared on 2/20/2016.
  */
+
 public class SmartBandage implements Serializable{
     private static final String TAG = SmartBandage.class.getSimpleName();
+
     public static final ParcelUuid BANDAGE_SERVICE = ParcelUuid.fromString("0000f0f0-0000-1000-8000-00805f9b34fb");
-    public final static boolean CONNECTED = true;
-    public final static boolean DISCONNECTED = false;
+
     Context context;
     private String bandageName;
     private BluetoothGatt mBluetoothGatt;
@@ -48,11 +37,13 @@ public class SmartBandage implements Serializable{
 
     private SendData sendData = new SendData();
     private Integer BandageId;
-    private boolean isActive;
     private SmartBandage selfRef;
+
     Queue<Intent> broadcastQueue = new LinkedList<>();
     Queue<HistoricalReading> sendQueue = new LinkedList<>();
+
     private boolean bandageConnectionStatus = false;
+
     public final static String ACTION_GATT_SERVICES_DISCOVERED =
             "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
     public final static String ACTION_DATA_AVAILABLE =
@@ -87,11 +78,6 @@ public class SmartBandage implements Serializable{
         return bandageAddress;
     }
 
-
-    public void setBandageConnectionStatus(boolean status) {
-        this.bandageConnectionStatus = status;
-    }
-
     public boolean getBandageConnectionStatus() {
         return this.bandageConnectionStatus;
     }
@@ -112,9 +98,11 @@ public class SmartBandage implements Serializable{
     private int parseID(byte[] data){
     return ReadingList.parse16BitLittleEndian(data, 0);
     }
+
     private int parseState(byte[] data){
         return ReadingList.parse16BitLittleEndian(data, 0);
     }
+
     private double parseBattery(byte[] data){
     int count = 0;
     double sum = 0;
@@ -126,9 +114,11 @@ public class SmartBandage implements Serializable{
     readingValue = sum/count;
     return readingValue;
     }
+
     private int parseExtPower(byte[] data){
     return (0x0FF & data[0]);
     }
+
     private Double[] parseMoisture(byte[] data){
         getCurrentReadings().Moistures.clear();
         currentReadings.parseMoistureArray(data, 0);
@@ -190,7 +180,6 @@ public class SmartBandage implements Serializable{
             HistoricalReading reading = HistoricalReading.FromRawData(referenceTime, data, i * 22 + HistoricalReading.HistoricalReadingDataOffsets.RefTimeSize);
 
             if (null != reading) {
-                // TODO: Use the actual bandage id
                 reading.BandageId = bandageId;
                 reading.BandageId = 14;
                 returnList.add(reading);
@@ -258,8 +247,6 @@ public class SmartBandage implements Serializable{
 
         @Override
         public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
-            BluetoothGattCharacteristic bluetoothGattCharacteristic;
-            boolean flag = true;
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 System.out.println("Application MTU size updated from service: " + Integer.toString(mtu));
 
@@ -389,6 +376,7 @@ public class SmartBandage implements Serializable{
             }
         }
     };
+
     private boolean readingCharacteristic(Queue<BluetoothGattCharacteristic> characteristicQueue) {
         BluetoothGattCharacteristic characteristic;
         characteristic = characteristicQueue.remove();
@@ -518,7 +506,6 @@ public class SmartBandage implements Serializable{
             System.out.println("Disabling notifications for characteristic " + characteristic.getUuid().toString());
         }
 
-//        mNotifyCharacteristic = characteristic;
         mBluetoothGatt.setCharacteristicNotification(characteristic, true);
 
         final BluetoothGattDescriptor desc = characteristic.getDescriptor(CONFIG_DESCRIPTOR);
@@ -541,5 +528,4 @@ public class SmartBandage implements Serializable{
 
         return true;
     }
-
 }
